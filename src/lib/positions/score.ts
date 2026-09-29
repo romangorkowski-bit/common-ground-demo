@@ -177,7 +177,8 @@ export function scorePosition(
 
   return {
     positionId: position.id,
-    score: Math.round(score * 10) / 10,
+    // Bonuses can stack past the top of the scale; 100 means "as good a fit as we can tell".
+    score: Math.min(100, Math.round(score * 10) / 10),
     windowStatus: status,
     datesKnown: position.datesKnown,
     justPosted: position.justPosted,

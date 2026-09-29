@@ -1,15 +1,17 @@
 import { EMPTY_FACTS, type AffinityFacts, type FactsMeta, type StudentProfile } from "@/lib/ai/schemas";
 import { student as fixtureStudent } from "@/lib/affinity/__fixtures__/cast";
 import { DEFAULT_WEIGHTS, type HomophilyWeights } from "@/lib/homophily/scorer";
+import { demoShiftMs, demoYearShift, shiftIso, shiftYear } from "@/lib/demo-clock";
+import { readCookieStudent, writeCookieStudent } from "./demo-cookie";
 import { isPersistenceConfigured, loadPersisted, savePersisted } from "./demo-persist";
 
 /**
  * The demo-mode store: one student per browser.
  *
- * Held in module memory on a single server; on Vercel, where each request may
- * run on a different instance, load()/save() go through a Delta table
- * (demo-persist.ts) so the browser's student is the same everywhere. The sync
- * get()/set() remain for tests and for mock mode.
+ * load()/save() keep it in a Delta table (demo-persist.ts) when Databricks is
+ * configured, and otherwise in the browser's own cookies (demo-cookie.ts), so
+ * the student is the same whichever server instance answers. The sync
+ * get()/set() keep a module-memory map and remain for tests.
  *
  * Deliberately not a real account system. Demo mode exists so the product can be shown
  * and built before Supabase is configured, and anything that survives a server
@@ -39,9 +41,25 @@ export interface StoredStudent {
  * the resume reader needs warehouse credentials that a demo room rarely has —
  * the student can still replace it by uploading their own.
  */
+/**
+ * The fixture student is class of 2027, written in September 2026. Moved
+ * forward a year at a time (see demo-clock.ts), so whenever the demo is
+ * opened they are a student recruiting for next summer, not an alum.
+ */
+function keepCurrent(profile: StudentProfile): StudentProfile {
+  const years = demoYearShift();
+  if (years === 0) return profile;
+  return {
+    ...profile,
+    grad_date: shiftYear(profile.grad_date, years),
+    coursework: profile.coursework.map((c) => ({ ...c, term: c.term?.replace(/\d{4}/, (y) => String(Number(y) + years)) ?? null })),
+    experience: profile.experience.map((e) => ({ ...e, start: shiftYear(e.start, years), end: shiftYear(e.end, years) })),
+  };
+}
+
 function seed(): StoredStudent {
   return {
-    profile: {
+    profile: keepCurrent({
       ...fixtureStudent.profile,
       affinity: {
         ...fixtureStudent.profile.affinity,
@@ -53,9 +71,9 @@ function seed(): StoredStudent {
       },
       uncertainties: [
         "The activities section lists “BAP”. That is probably Beta Alpha Psi, but the document never says so.",
-        "Two end dates overlap in summer 2026 — the Acme internship and the campus job may have run at the same time.",
+        `Two end dates overlap in summer ${2026 + demoYearShift()} — the Acme internship and the campus job may have run at the same time.`,
       ],
-    },
+    }),
     facts: { ...EMPTY_FACTS },
     meta: {},
     intakeCompletedAt: null,
@@ -76,15 +94,24 @@ function prefilled(): StoredStudent {
   for (const key of Object.keys(fixtureStudent.facts)) {
     meta[key] = { source: "answer", confidence: 1, raw: null, updatedAt: now };
   }
+  const years = demoYearShift();
+  const shift = demoShiftMs();
   return {
-    profile: fixtureStudent.profile,
-    facts: { ...fixtureStudent.facts },
+    profile: keepCurrent(fixtureStudent.profile),
+    facts: {
+      ...fixtureStudent.facts,
+      school_grad_year: shiftYear(fixtureStudent.facts.school_grad_year, years),
+      events: fixtureStudent.facts.events.map((e) => ({ ...e, date: shiftIso(e.date, shift) })),
+    },
     meta,
     intakeCompletedAt: now,
     email: null,
     homophilyWeights: { ...DEFAULT_WEIGHTS },
   };
 }
+
+/** The sample student's profile: what a cookie session leaves out unless the student replaced it. */
+export const sampleProfile = (): StudentProfile => initial().profile;
 
 const initial = () => (process.env.DEMO_PREFILL === "1" ? prefilled() : seed());
 
@@ -134,7 +161,7 @@ export const demoStore = {
    */
   async load(id: string | null | undefined): Promise<StoredStudent | null> {
     if (!id) return null;
-    if (!isPersistenceConfigured()) return demoStore.get(id);
+    if (!isPersistenceConfigured()) return (await readCookieStudent(sampleProfile())) ?? initial();
     try {
       const found = await loadPersisted(id);
       if (found) {
@@ -153,20 +180,28 @@ export const demoStore = {
 
   /** set(), then written through to the table before returning, so the redirect that follows sees it anywhere. */
   async save(id: string, next: Partial<StoredStudent>): Promise<StoredStudent> {
+    if (!isPersistenceConfigured()) {
+      const student = { ...((await readCookieStudent(sampleProfile())) ?? initial()), ...next };
+      await writeCookieStudent(student, sampleProfile());
+      return student;
+    }
     // The request that is saving has almost always just loaded this student
     // (getSession), so the in-process copy is current; re-reading would cost
     // a round trip for nothing. Only a save with no prior load reads first.
-    const base = students.get(id) ?? (isPersistenceConfigured() ? (await demoStore.load(id)) ?? initial() : demoStore.get(id)!);
+    const base = students.get(id) ?? (await demoStore.load(id)) ?? initial();
     const student = { ...base, ...next };
     students.set(id, student);
-    if (isPersistenceConfigured()) {
-      try {
-        await savePersisted(id, student);
-      } catch (err) {
-        console.error("[demo] could not persist the session; it will not survive this instance", err instanceof Error ? err.message : err);
-      }
+    try {
+      await savePersisted(id, student);
+    } catch (err) {
+      console.error("[demo] could not persist the session; it will not survive this instance", err instanceof Error ? err.message : err);
     }
     return student;
+  },
+
+  /** Back to the sample student, through whichever store load()/save() use. */
+  async restart(id: string): Promise<StoredStudent> {
+    return demoStore.save(id, initial());
   },
 
   /** How many browsers this server currently knows. For the status strip. */

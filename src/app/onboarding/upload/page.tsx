@@ -4,6 +4,7 @@ import { DemoStrip, Nav, StatusFooter } from "@/components/tb/chrome";
 import { FIELDS } from "@/lib/intake/fields";
 import { getResumeProvider } from "@/lib/resume";
 import { getSession } from "@/lib/session";
+import { startWithSampleStudent } from "../actions";
 import { UploadForm } from "./upload-form";
 
 export const dynamic = "force-dynamic";
@@ -27,25 +28,48 @@ export default async function UploadPage() {
           <h1 className="display-md" style={{ textTransform: "uppercase", margin: "var(--space-16) 0" }}>
             Start with<br />your resume.
           </h1>
-          <p className="body" style={{ color: "var(--ink-muted)", margin: "0 0 var(--space-32)" }}>
-            Your school, employers and clubs become things we can match on. {derivable} of our{" "}
-            {FIELDS.length} questions are answered from it.
-          </p>
+          {reader.isReady() ? (
+            <>
+              <p className="body" style={{ color: "var(--ink-muted)", margin: "0 0 var(--space-32)" }}>
+                Your school, employers and clubs become things we can match on. {derivable} of our{" "}
+                {FIELDS.length} questions are answered from it.
+              </p>
 
-          <UploadForm reader={reader.name} />
+              <UploadForm reader={reader.name} />
 
-          <p className="mono-micro" style={{ color: "var(--ink-faint)", margin: "var(--space-24) 0 0", textTransform: "none" }}>
-            &gt; Stored privately. Never sent anywhere on your behalf.
-          </p>
+              <p className="mono-micro" style={{ color: "var(--ink-faint)", margin: "var(--space-24) 0 0", textTransform: "none" }}>
+                &gt; Stored privately. Never sent anywhere on your behalf.
+              </p>
 
-          <div className="tb-rule" style={{ marginTop: "var(--space-32)", paddingTop: "var(--space-24)" }}>
-            <p className="body-sm" style={{ color: "var(--ink-muted)", margin: 0 }}>
-              No PDF handy?{" "}
-              <Link href="/onboarding/review" className="tb-link" style={{ color: "var(--ink)" }}>
-                Continue with what we have
-              </Link>
-            </p>
-          </div>
+              <div className="tb-rule" style={{ marginTop: "var(--space-32)", paddingTop: "var(--space-24)" }}>
+                <p className="body-sm" style={{ color: "var(--ink-muted)", margin: 0 }}>
+                  No PDF handy?{" "}
+                  <Link href="/onboarding/review" className="tb-link" style={{ color: "var(--ink)" }}>
+                    Continue with what we have
+                  </Link>
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="body" style={{ color: "var(--ink-muted)", margin: "0 0 var(--space-16)" }}>
+                In the full app a model reads your PDF, and your school, employers and clubs become things we
+                can match on: {derivable} of our {FIELDS.length} questions are answered from it.
+              </p>
+              <p className="body" style={{ color: "var(--ink-muted)", margin: "0 0 var(--space-32)" }}>
+                This demo has no model attached, so it starts from a sample student whose resume has already
+                been read. Everything after this step is the real flow.
+              </p>
+
+              <form action={startWithSampleStudent}>
+                <button type="submit" className="tb-btn tb-btn--solid mono-label">Use the sample student &#8599;</button>
+              </form>
+
+              <p className="mono-micro" style={{ color: "var(--ink-faint)", margin: "var(--space-24) 0 0", textTransform: "none" }}>
+                &gt; Sam Rivera &middot; Virginia Tech &middot; cybersecurity, aiming for consulting. Your answers stay in this browser.
+              </p>
+            </>
+          )}
         </div>
       </section>
 
@@ -54,8 +78,7 @@ export default async function UploadPage() {
         readings={[
           { label: "Accepts", value: "PDF / 15MB" },
           { label: "Fields from resume", value: `${derivable} of ${FIELDS.length}` },
-          { label: "Reader", value: reader.name },
-          { label: "Credentials", value: reader.isReady() ? "Ready" : "Not set" },
+          { label: "Reader", value: reader.isReady() ? reader.name : "sample student" },
         ]}
       />
     </div>

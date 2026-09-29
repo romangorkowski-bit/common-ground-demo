@@ -27,11 +27,11 @@ export default async function LandingPage() {
       <Hero
         picture="/hands.png"
         marble="/marble.png"
-        head={<>Eleven people,<br />not a thousand<br />applications.</>}
+        head={<>Find genuine<br />connections.</>}
         lines={[`> ranking ${TIERS.filter((t) => t.inScope).length} kinds of common ground_`]}
         note="Two minutes &middot; We only ask what your resume does not already say"
       >
-        <Link className="tb-btn tb-btn--solid mono-label" href={start}>{demo || student ? "Upload your resume" : "Make an account"} &#8599;</Link>
+        <Link className="tb-btn tb-btn--solid mono-label" href={start}>{demo ? "Try the demo" : student ? "Upload your resume" : "Make an account"} &#8599;</Link>
       </Hero>
 
       <section className="tb-band tb-band-top tb-layer">
@@ -60,7 +60,7 @@ export default async function LandingPage() {
             Not the week applications open. The advantage is in having talked to people before the
             posting went up.
           </p>
-          <Link className="tb-btn tb-btn--solid mono-label" href={start}>Upload your resume &#8599;</Link>
+          <Link className="tb-btn tb-btn--solid mono-label" href={start}>{demo ? "Try the demo" : "Upload your resume"} &#8599;</Link>
         </div>
       </section>
 

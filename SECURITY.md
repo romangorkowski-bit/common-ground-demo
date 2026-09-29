@@ -1,34 +1,34 @@
 # Security notes
 
 What protects the public demo, what does not, and what to change before it is anything more than a demo.
-Audited 2026-09-20.
+Audited September 2026.
+
+## The demo
+
+With no `.env.local` the app holds no secrets and calls no outside service: people, postings and the
+sample student are bundled, and each visitor's answers live in that visitor's own cookies
+(`httpOnly`, `sameSite=lax`, `secure` in production). Nothing a visitor types reaches a server-side
+store.
 
 ## Secrets
 
-- No secret is in the repo or its history (scanned for Databricks, Vercel, GitHub, Anthropic, AWS, Slack and
-  JWT patterns before the repo went public). `.env*` is gitignored except `.env.example`, which holds names only.
+- No secret is in the repo or its history. `.env*` is gitignored except `.env.example`, which holds
+  names only.
 - `.githooks/pre-commit` blocks a commit that adds a token. `npm install` activates it in every clone
   (`prepare` sets `core.hooksPath`); `databricks/scripts/setup.sh` does the same.
-- Runtime secrets live in Vercel project environment variables and `~/common-ground/.env.local`:
-  `DATABRICKS_HOST`, `DATABRICKS_WAREHOUSE_ID`, `DATABRICKS_TOKEN`. Nothing is exposed under `NEXT_PUBLIC_`.
-- The Databricks token is a personal access token with the owner's full workspace rights, because Free Edition
-  offers nothing narrower. It expires 2026-10-03. Rotate it there and in Vercel; revoke the superseded ones.
+- In the full version the runtime secrets are `DATABRICKS_HOST`, `DATABRICKS_WAREHOUSE_ID` and
+  `DATABRICKS_TOKEN`, set as host environment variables. Nothing is exposed under `NEXT_PUBLIC_`
+  except the Supabase anon key, which is public by design.
 
-## What a stranger can do on the public URL
+## The full version on a public URL
 
-- Upload a PDF (type and 15 MB checked before any byte is read) and have it read by `ai_query` in the warehouse.
-- Run the plan agent on any listed posting (model serving, tool calls, a rewrite).
-- Both are rate-limited per browser and per server instance (`src/lib/limit.ts`: 6 resume reads and 8 agent
-  runs per ten minutes per session; 40 and 60 per instance). The limit is per instance, so the true ceiling is
-  that times Vercel's instance count. A shared limiter is the upgrade if the demo gets real traffic.
-
-## Data a stranger leaves behind
-
-- `workspace.jobsearch.demo_sessions`: the profile extracted from their resume and their answers, keyed by a
-  random cookie id. No name, email or password is asked for. The PDF itself is never stored.
-- `workspace.jobsearch.agent_runs`: each agent run's plan, trace and tailored resume.
-- Databricks job `retention-demo-data` (daily, 09:00 ET) deletes sessions older than 14 days and runs older
-  than 30. Everything else in the warehouse is synthetic.
+- A visitor can upload a PDF (type and 15 MB checked before any byte is read) and have it read by
+  `ai_query`, and can run the plan agent. Both are rate-limited per browser and per server instance
+  (`src/lib/limit.ts`: 6 resume reads and 8 agent runs per ten minutes per session; 40 and 60 per
+  instance). A shared limiter is the upgrade for real traffic.
+- `workspace.jobsearch.demo_sessions` and `agent_runs` keep what a visitor leaves behind, keyed by a
+  random cookie id; no name, email or password is asked for and the PDF is never stored. A scheduled
+  job should delete sessions after 14 days and runs after 30.
 
 ## Application
 

@@ -7,7 +7,7 @@
 export const DEMO_COOKIE = "cg_demo";
 
 /** Routes that need an account when Supabase is configured. */
-export const PROTECTED_PATHS = ["/dashboard", "/onboarding", "/intake", "/jobs", "/people", "/profile", "/plan"] as const;
+export const PROTECTED_PATHS = ["/dashboard", "/onboarding", "/intake", "/jobs", "/people", "/profile"] as const;
 
 export const isProtectedPath = (path: string): boolean =>
   PROTECTED_PATHS.some((p) => path === p || path.startsWith(`${p}/`));

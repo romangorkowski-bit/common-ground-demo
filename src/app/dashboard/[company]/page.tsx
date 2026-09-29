@@ -10,7 +10,7 @@ import { loadCompanyPool, peopleAt, positionsAt } from "@/lib/companies/pool";
 import { HomophilyWeightsForm } from "@/components/homophily-weights-form";
 import { rankPeopleByHomophily } from "@/lib/homophily";
 import { computeGaps } from "@/lib/intake/gaps";
-import { rankPositions } from "@/lib/positions";
+import { getPositionsProvider, rankPositions } from "@/lib/positions";
 import { getSession } from "@/lib/session";
 import { chooseCompany } from "../actions";
 
@@ -176,7 +176,7 @@ export default async function CompanyPage({
             {openings.length > 0 && (
               <div className="tb-panel">
                 <div className="flex flex-wrap items-center justify-between gap-[var(--space-16)]">
-                  <p className="mono-label" style={{ margin: 0 }}>&gt; Applications at {info.name} &middot; Summer 2027 directory</p>
+                  <p className="mono-label" style={{ margin: 0 }}>&gt; Applications at {info.name}{getPositionsProvider().name === "databricks" ? <> &middot; Summer 2027 directory</> : <> &middot; sample postings</>}</p>
                   <Link className="tb-link mono-label" href="/jobs">All recommended &#8599;</Link>
                 </div>
                 <ul style={{ margin: "var(--space-16) 0 0", padding: 0, listStyle: "none", display: "grid", gap: "var(--space-12)" }}>

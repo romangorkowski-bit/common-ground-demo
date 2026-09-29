@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signOut } from "@/app/(auth)/actions";
+import { getPeopleProvider } from "@/lib/people";
 
 /** Square with an inscribed crosshair — the system's own geometry. */
 function Mark() {
@@ -107,13 +108,19 @@ export function StatusFooter({
 }
 
 /**
- * Demo mode, stated as a machine line rather than a friendly toast. Quietly
- * dropping a student's answers would be a worse failure than saying so.
+ * Demo mode, stated as a machine line rather than a friendly toast. Only on
+ * the bundled sample data: with the warehouse behind it there is nothing to
+ * warn about, and the line would be the first thing on every page.
  */
 export function DemoStrip() {
-  // Gone by request: with sessions in the warehouse there is nothing to warn
-  // about, and the line was the first thing on every page.
-  return null;
+  if (getPeopleProvider().name !== "mock") return null;
+  return (
+    <div className="tb-band-bottom tb-layer mono-micro"
+      style={{ padding: "var(--space-8) var(--space-24)", color: "var(--ink-faint)", textTransform: "uppercase" }}>
+      <span className="tb-led tb-led--live" aria-hidden="true" />{" "}
+      Portfolio demo &mdash; sample people and postings; your answers stay in this browser
+    </div>
+  );
 }
 
 /** Uppercase section heading with the machine-line marker. */

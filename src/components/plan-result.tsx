@@ -46,7 +46,7 @@ export function PlanResult({ result }: { result: AgentResult }) {
         {!resume ? (
           <p className="body-sm" style={{ margin: "var(--space-12) 0 0", color: "var(--ink-muted)" }}>
             {result.mode === "fallback" && result.model.startsWith("none")
-              ? "The rewrite needs the warehouse model; set PEOPLE_PROVIDER=databricks to see it."
+              ? "In the full version a model rewrites your resume for this role, and every employer, title and date is checked against your profile. This demo runs without a model, so the plan above is computed and the rewrite is skipped."
               : "The rewrite did not come back this run. The plan above stands; try again for the resume."}
           </p>
         ) : (

@@ -1,7 +1,24 @@
 import { canonical, sameEntity } from "@/lib/affinity/normalize";
-import { cast } from "@/lib/affinity/__fixtures__/cast";
+import { cast as fixtureCast } from "@/lib/affinity/__fixtures__/cast";
 import type { Person } from "@/lib/affinity/types";
+import { demoShiftMs, shiftIso } from "@/lib/demo-clock";
 import type { PeopleProvider, PeopleQuery } from "./types";
+
+/**
+ * The cast with its posts and events moved to the same distance from today
+ * as from the day the fixtures were written, so a post "three days ago"
+ * stays three days old and the decaying tiers never fade out of the demo.
+ */
+export function currentCast(now = Date.now()): Person[] {
+  const shift = demoShiftMs(now);
+  if (shift === 0) return [...fixtureCast];
+  return fixtureCast.map((p) => ({
+    ...p,
+    fetchedAt: shiftIso(p.fetchedAt, shift),
+    posts: p.posts.map((post) => ({ ...post, publishedAt: shiftIso(post.publishedAt, shift) })),
+    events: p.events.map((e) => ({ ...e, date: shiftIso(e.date, shift) })),
+  }));
+}
 
 /**
  * The stage-safe provider: the same eleven people the ladder test asserts on.
@@ -10,7 +27,8 @@ import type { PeopleProvider, PeopleQuery } from "./types";
 export const mockPeopleProvider: PeopleProvider = {
   name: "mock",
   async getPeople({ companies, limit }: PeopleQuery): Promise<Person[]> {
-    if (!companies.length) return [...cast].slice(0, limit);
+    const cast = currentCast();
+    if (!companies.length) return cast.slice(0, limit);
     const wanted = companies.map((c) => canonical("company", c));
     const matched = cast.filter((p) =>
       wanted.some((w) => sameEntity("company", w, canonical("company", p.currentCompany))));

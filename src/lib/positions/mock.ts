@@ -1,4 +1,5 @@
 import { canonical, sameEntity } from "@/lib/affinity/normalize";
+import { demoYearShift } from "@/lib/demo-clock";
 import type { Position, PositionsProvider, PositionsQuery } from "./types";
 
 /**
@@ -18,7 +19,10 @@ export function mockPositions(now = Date.now()): Position[] {
   const d = (n: number) => inDays(n, now);
   const base = { source: "mock", location: null as string | null, description: null as string | null, companyId: null as string | null,
     category: null as string | null, datesKnown: true, justPosted: false, requirementsTypical: false };
-  return [
+  // Class years move with the demo student's (see demo-clock.ts), so the
+  // postings keep targeting "your class" whatever year the demo is opened.
+  const years = demoYearShift(now);
+  const postings: Position[] = [
     { ...base, id: "m01", title: "Technology Analyst Intern", company: "Deloitte", type: "internship", vertical: "consulting",
       location: "Arlington, VA", opensOn: d(12), closesOn: d(58), targetGradYears: [2027, 2028], url: "https://jobs.example.com/deloitte/m01",
       description: "Summer analyst on Government & Public Services technology engagements.",
@@ -68,6 +72,7 @@ export function mockPositions(now = Date.now()): Position[] {
       location: "Arlington, VA", opensOn: d(110), closesOn: d(170), targetGradYears: [2027], url: "https://jobs.example.com/deloitte/m15",
       requirements: [req("Excel modeling", "skill"), req("PowerPoint", "skill"), req("Case interviews", "skill", false), req("Bachelor's in business, economics, or engineering", "degree")] },
   ];
+  return years === 0 ? postings : postings.map((p) => ({ ...p, targetGradYears: p.targetGradYears.map((y) => y + years) }));
 }
 
 export const mockPositionsProvider: PositionsProvider = {

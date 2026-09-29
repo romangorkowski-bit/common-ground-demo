@@ -49,3 +49,6 @@ next-env.d.ts
 # the build depend on the `prebuild` npm lifecycle hook, and `next build` run
 # directly — which is what a plain CI job does — failed on a fresh clone.
 # They are regenerated on every dev and build, so drift shows up as a diff.
+
+# Local editor/agent settings
+.claude/

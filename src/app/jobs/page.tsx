@@ -72,7 +72,7 @@ export default async function JobsPage() {
 
       <section className="tb-band tb-layer">
         <div className="tb-wrap">
-          <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>&gt; Resume helper &middot; Summer 2027 Internships Directory</p>
+          <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>&gt; Resume helper &middot; {provider.name === "databricks" ? "Summer 2027 Internships Directory" : "Sample postings"}</p>
           <h1 className="display-md" style={{ textTransform: "uppercase", margin: "var(--space-16) 0" }}>
             {dated ? <>{open.length} window{open.length === 1 ? "" : "s"},<br />soonest first.</> : <>Applications<br />picked for you.</>}
           </h1>

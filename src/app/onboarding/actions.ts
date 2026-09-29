@@ -98,6 +98,19 @@ export async function uploadResume(_prev: UploadState, formData: FormData): Prom
   redirect("/onboarding/review");
 }
 
+/**
+ * The demo's way in when no resume reader is configured: start from the
+ * sample student, whose resume has already been read, and go to the review.
+ */
+export async function startWithSampleStudent(): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    const id = await demoAccountId();
+    if (!id) redirect("/onboarding/upload");
+    await demoStore.restart(id);
+  }
+  redirect("/onboarding/review");
+}
+
 /** The confirmation gate: nothing downstream reads a profile the student hasn't seen. */
 export async function confirmProfile(): Promise<void> {
   const { student } = await getSession();

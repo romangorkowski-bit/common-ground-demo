@@ -1,22 +1,47 @@
 # Common Ground
 
-Students land jobs through human connection, not AI-blasted applications. This ranks *people* at a
-student's target companies by how strong a genuine, nameable commonality is — and asks the student
-only for the facts their resume didn't already give up.
+Students land jobs through human connection, not AI-blasted applications. Common Ground ranks
+*people* at a student's target companies by how strong a genuine, nameable commonality is (same
+club, same hometown, same career jump), asks the student only for the facts their resume didn't
+already give up, and shows what each internship asks for and how to close the gaps.
+
+Built as a team project for a Databricks hackathon, September 2026.
+
+![Landing page](docs/screenshots/landing.jpg)
+
+| People at a company, strongest connection first | One opening: what they want, where you stand |
+|---|---|
+| ![Company page](docs/screenshots/company.jpg) | ![Opening page](docs/screenshots/opening.jpg) |
+
+## Run the demo
 
 ```bash
 npm install
-npm run dev     # http://localhost:3000 — runs in demo mode with no config at all
+npm run dev     # http://localhost:3000
 ```
 
-With no `.env.local`, the app runs in **demo mode**: there is no sign-in, every screen works, and a
-banner says so on every page. Each browser gets its own student, keyed by a cookie the proxy sets
-on the first visit, so two browsers never see each other's answers; a server restart clears them.
-Copy `.env.example` to `.env.local` to turn on real accounts and persistence.
+No accounts, keys or database are needed. With no `.env.local` the app runs as a self-contained
+portfolio demo:
 
-The flow is: upload a resume → answer only the questions the resume left open (about you, never
-about companies) → **dashboard**, where you pick one company at a time and see who to write to
-there. With Supabase configured, making an account comes first.
+- **No sign-in.** Each browser is its own student.
+- **A sample student.** Reading a real resume needs a hosted model, so the demo starts from Sam Rivera,
+  a Virginia Tech student whose resume has already been read. Everything after that step is the real
+  flow: the questionnaire, the rankings, the openings and the plan agent.
+- **Sample people and postings** (`src/lib/people/mock.ts`, `src/lib/positions/mock.ts`). Their dates
+  move with the calendar (`src/lib/demo-clock.ts`), so the demo never goes stale.
+- **Answers live in the browser**, in compressed cookies (`src/lib/session/demo-cookie.ts`). They
+  survive reloads and server restarts, and any host works, including serverless platforms like Vercel
+  where each request may reach a different instance.
+
+The flow: pick the sample student → confirm what was read → answer only the questions the resume
+left open → **dashboard**, where you pick a company and see who to write to there → **Applications**,
+where each opening shows what it asks for, where you stand, and a plan for closing the gaps.
+
+## Stack
+
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 · Zod · Vitest ·
+Databricks (Delta tables, SQL Statement API, `ai_query`, Unity Catalog functions, Genie) ·
+Supabase (auth and Postgres with row-level security, optional)
 
 ## The ladder
 
@@ -114,22 +139,27 @@ form says to go and open the link. Turning that off (Authentication → Provider
 email") makes sign-up log you straight in, which is the better setting for a demo where judges make
 accounts on the spot.
 
-## Wiring up Databricks
+## Running it for real
 
-`src/lib/people/databricks.ts` is the only file that needs to change. Set `PEOPLE_PROVIDER=databricks`
-plus the three `DATABRICKS_*` variables and the UI is untouched — the engine consumes `Person`
-(`src/lib/affinity/types.ts`), and a provider's whole job is producing that shape.
+Everything the demo stubs out is built. Copy `.env.example` to `.env.local` and fill in what you want to turn on:
 
-Before relying on it, run `coverage(people)` from `src/lib/affinity`. Tiers 8 and 9 need post and
-event rows that a warehouse table may simply not carry, and that is worth knowing in advance.
+- **Databricks** (`DATABRICKS_HOST`, `DATABRICKS_WAREHOUSE_ID`, `DATABRICKS_TOKEN`, then
+  `PEOPLE_PROVIDER=databricks`): 1,100 synthetic alumni, the real Summer 2027 Internships Directory
+  (6,632 postings), resume reading with `ai_query`, sessions in a Delta table, and a plan agent that
+  calls warehouse tools and rewrites the resume with a fabrication check. `databricks/README.md` has
+  the schema, the loader (`make load`) and the Genie space.
+- **Supabase** (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+  `SUPABASE_SERVICE_ROLE_KEY`): real accounts. See "Turning on accounts" above.
+- **Anthropic** (`RESUME_PROVIDER=anthropic`, `ANTHROPIC_API_KEY`): read resumes with Claude instead
+  of the warehouse.
 
 Rows fetched from a provider are scored in memory and never written to Supabase. We hold no
-standing database of people who never signed up — which is also why tiers 1 and 6 are out.
+standing database of people who never signed up, which is also why tiers 1 and 6 are out.
 
 ## Checks
 
 ```bash
-npm test          # 102 tests
+npm test          # 184 tests
 npm run typecheck
 npm run lint
 ```
@@ -147,9 +177,12 @@ The ones worth knowing about:
   ever loops, a student can never finish.
 - `decay.test.ts` — stubs `Date.now` to throw, proving no predicate reads the clock.
 
-## Not built yet
+## Credits
 
-The openings UI. `src/lib/ats` and `src/lib/jobs` ingest and classify roles and are tested, and
-`/api/cron/poll` runs nightly, but nothing renders them — `/jobs` says so rather than showing an
-empty page. Resume tailoring is deprioritised by design; `tailor-resume.ts` and
-`fabrication-check.ts` exist, but `tailored_resumes.pdf_path` has no storage bucket yet.
+A team project; the full commit history is preserved.
+
+- **Roman Gorkowski**: the connection ladder and its scorer, the homophily scorer, the computed
+  questionnaire, the website and its Terminal Brutalist interface, resume reading with `ai_query`,
+  and this portfolio version of the demo.
+- **Stephen Kidder**: the Databricks warehouse and synthetic alumni pool, the Summer 2027 internships
+  directory, the plan agent and opening pages, warehouse-backed sessions, and the security review.
