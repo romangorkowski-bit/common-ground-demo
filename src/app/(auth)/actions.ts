@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { safeNext } from "@/lib/safe-path";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { DEMO_COOKIE } from "@/lib/session/cookie";
@@ -12,11 +13,6 @@ export interface AuthState {
   notice?: string | null;
 }
 
-/** Only ever a same-site path, so a `next` param cannot send anyone off-site. */
-const safeNext = (raw: unknown, fallback: string): string => {
-  const s = String(raw ?? "");
-  return s.startsWith("/") && !s.startsWith("//") ? s : fallback;
-};
 
 async function authenticate(
   mode: "sign-in" | "sign-up",

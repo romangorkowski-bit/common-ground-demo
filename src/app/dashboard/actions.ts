@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { companyInfo, sameCompany } from "@/lib/companies";
 import { WEIGHT_LABELS, type HomophilyWeights } from "@/lib/homophily/scorer";
+import { safeNext } from "@/lib/safe-path";
 import { getSession, saveFacts, saveHomophilyWeights } from "@/lib/session";
 
 const MAX_NAME = 80;
@@ -65,8 +66,7 @@ export async function saveWeightsAction(formData: FormData): Promise<void> {
   }
   await saveHomophilyWeights(next);
 
-  const raw = String(formData.get("returnTo") ?? "");
-  const returnTo = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
+  const returnTo = safeNext(formData.get("returnTo"), "/dashboard");
   revalidatePath(returnTo);
   redirect(returnTo);
 }

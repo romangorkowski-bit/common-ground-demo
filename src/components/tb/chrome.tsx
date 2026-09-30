@@ -12,7 +12,7 @@ function Mark() {
 }
 
 export interface NavProps {
-  current?: "people" | "openings" | "profile";
+  current?: "people" | "openings" | "resume" | "profile";
   signedIn?: boolean;
   cta?: { label: string; href: string } | null;
   /** Whose account this is. Absent in demo mode, where there is no account. */
@@ -31,6 +31,7 @@ export function Nav({ current, signedIn, cta, email }: NavProps) {
         <div className="tb-nav__links">
           <NavLink href="/dashboard" active={current === "people"}>Dashboard</NavLink>
           <NavLink href="/jobs" active={current === "openings"}>Applications</NavLink>
+          <NavLink href="/resume" active={current === "resume"}>Resume</NavLink>
           <NavLink href="/intake" active={current === "profile"}>Profile</NavLink>
         </div>
       ) : (
@@ -76,7 +77,7 @@ export interface Diagnostic { label: string; value: React.ReactNode }
 /**
  * The diagnostic strip. One per page.
  *
- * Every value here is measured by the app — people ranked, strongest tier
+ * Every value here is measured by the app — people ranked, strongest rating
  * reached, questions outstanding, which provider answered. The system is blunt
  * about this: invented values are the difference between the page reading as
  * an instrument and reading as a costume.

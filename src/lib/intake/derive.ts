@@ -27,7 +27,6 @@ export function derive(field: Field, profile: StudentProfile): unknown | null {
       ])]);
     case "clients_and_programs": return some(a.clients_and_programs);
     case "certifications_in_progress": return some(a.certifications_in_progress);
-    case "clearance": return a.clearance ?? null;
     case "projects_public": return some(profile.projects.map((p) => p.name));
     case "technical_domains":
       // Project summaries are the closest a resume gets to "what you actually

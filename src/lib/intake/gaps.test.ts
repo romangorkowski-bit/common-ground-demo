@@ -58,15 +58,15 @@ test("answering 'none' is an answer, and the question never comes back", () => {
 
 test("a low-confidence extraction is re-asked with its value prefilled", () => {
   const gaps = computeGaps({
-    profile: profileWith({ clearance: "Secret" }),
-    facts: { ...EMPTY_FACTS, clearance: "Secret" },
-    meta: { clearance: { source: "resume", confidence: 0.4, raw: null, updatedAt: "" } },
+    profile: profileWith({ programs: ["Honors College"] }),
+    facts: { ...EMPTY_FACTS, programs: ["Honors College"] },
+    meta: { programs: { source: "resume", confidence: 0.4, raw: null, updatedAt: "" } },
     now: NOW,
   });
-  const gap = gaps.find((g) => g.field.id === "clearance");
+  const gap = gaps.find((g) => g.field.id === "programs");
   assert.ok(gap);
   assert.equal(gap!.reason, "low_confidence");
-  assert.equal(gap!.prefill, "Secret");
+  assert.deepEqual(gap!.prefill, ["Honors College"]);
 });
 
 test("the extractor's own uncertainty jumps the queue and carries its words", () => {

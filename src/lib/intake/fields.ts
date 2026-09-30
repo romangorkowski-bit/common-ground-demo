@@ -6,10 +6,6 @@ export const SENIORITY_OPTIONS = [
   "Intern", "Analyst", "Associate", "Senior Associate", "Manager",
 ] as const;
 
-export const CLEARANCE_OPTIONS = [
-  "None", "Eligible", "Public Trust", "Secret", "Top Secret", "TS/SCI",
-] as const;
-
 /**
  * Every question the product can ask, and the only place their copy lives.
  *
@@ -184,13 +180,6 @@ export const FIELDS: readonly Field[] = Object.freeze<Field[]>([
     help: "“Accounting to data science”, “engineering to product”.",
     input: "pair", skipLabel: "No, staying on my path",
     tiers: [3], resumeDerivable: false, required: false, dictation: true,
-  },
-  {
-    id: "clearance", path: "clearance", theme: "targets",
-    question: "Do you hold, or are you eligible for, a security clearance?",
-    help: "Matters for federal and defense work.",
-    input: "select", options: CLEARANCE_OPTIONS,
-    tiers: [11], resumeDerivable: true, required: false, dictation: false,
   },
 
   // -------------------------------------------------------------- timely

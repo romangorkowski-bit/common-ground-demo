@@ -9,9 +9,9 @@ const fixture = (name: string) =>
 
 test("a text-based resume flattens to the text ai_query needs", async () => {
   const text = await pdfToText(new Uint8Array(await fixture("sample-resume.pdf")));
-  assert.match(text, /Roman Gorkowski/);
+  assert.match(text, /Sam Rivera/);
   assert.match(text, /Virginia Tech/);
-  assert.match(text, /Beta Alpha Psi/);
+  assert.match(text, /Delta Sigma Pi/);
   assert.ok(!/\n{3,}/.test(text), "runs of blank lines should be collapsed");
 });
 

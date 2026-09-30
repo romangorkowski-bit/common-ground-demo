@@ -27,7 +27,7 @@ test("a lower tier can never outscore a higher one, however much it stacks", () 
   // Dana matches tier 2 and nothing else: one shared org, derived not aliased.
   const minimalTier2: Person = {
     ...p2,
-    education: [{ ...p2.education[0], activities: ["Consulting Club"] }],
+    education: [{ ...p2.education[0], activities: ["Investment Club"] }],
     currentCompany: "Grant Thornton",
   };
   // A stack of everything below it, all at full strength.

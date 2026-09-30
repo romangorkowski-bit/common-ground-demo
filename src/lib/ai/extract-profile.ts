@@ -19,7 +19,7 @@ Rules:
 - grad_date must be an ISO date. If only a term is given ("Spring 2027"), use the usual end of that term.
 - Record anything ambiguous or contradictory in "uncertainties" instead of guessing. That list is shown to the student to correct, so it is a feature, not a failure.
 
-Also fill "affinity": clubs and student organisations, Greek letters and honour societies, named programmes, fellowships and scholarships, case competitions, named clients or engagements, certifications (including ones in progress), and any clearance. These decide who we introduce the student to, so a club you skipped costs them a real connection.
+Also fill "affinity": clubs and student organisations, Greek letters and honour societies, named programmes, fellowships and scholarships, case competitions, named clients or engagements, and certifications (including ones in progress). These decide who we introduce the student to, so a club you skipped costs them a real connection.
 - Do not infer an affiliation from a company or school name. If the document does not say it, it did not happen.
 - If an abbreviation in the document is ambiguous, record it verbatim and put the ambiguity in "uncertainties" — the student is shown that note next to the question that resolves it.
 - Do not attempt hometown, high school, communities, events or target companies. They are not on a resume, and a guessed hometown is worse than a blank one.`;

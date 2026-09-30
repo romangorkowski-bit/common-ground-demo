@@ -9,6 +9,7 @@ import { scorePersonByHomophily } from "@/lib/homophily";
 import { companyInfo, sameCompany } from "@/lib/companies";
 import { getPeopleProvider } from "@/lib/people";
 import { getPositionsProvider, positionGaps, rankPositions } from "@/lib/positions";
+import { rankByReferral } from "@/lib/referral";
 import { getSession } from "@/lib/session";
 import { AskAgent } from "./ask-agent";
 
@@ -43,9 +44,10 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
     .getPeople({ companies: [position.company], limit: 2000 })
     .then((all) => all.filter((p) => sameCompany(p.currentCompany, position.company)))
     .catch(() => []);
-  const { results } = rankPeople(scorable, people);
+  const ladder = new Map(rankPeople(scorable, people).results.map((r) => [r.personId, r]));
   const byId = new Map(people.map((p) => [p.id, p]));
-  const top = results.slice(0, 3);
+  // The three most likely to refer the student into this opening.
+  const top = rankByReferral(scorable, people).slice(0, 3);
 
   const missing = gaps.filter((g) => g.status === "missing").length;
 
@@ -76,9 +78,12 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
               <span className="mono-label" style={{ border: "var(--border-2) solid var(--signal)", color: "var(--signal)", padding: "var(--space-4) var(--space-10)", whiteSpace: "nowrap" }}>
                 Fit <span style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{Math.round(fit.score)}</span>
               </span>
-              {position.url && (
-                <a className="tb-btn tb-btn--sm mono-label" href={position.url} target="_blank" rel="noreferrer">The posting &#8599;</a>
-              )}
+              <div className="flex flex-wrap justify-end gap-[var(--space-8)]">
+                <Link className="tb-btn tb-btn--sm tb-btn--solid mono-label" href={`/jobs/${position.id}/resume`}>Tailor my resume &#8599;</Link>
+                {position.url && (
+                  <a className="tb-btn tb-btn--sm mono-label" href={position.url} target="_blank" rel="noreferrer">The posting &#8599;</a>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -126,14 +131,14 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
 
           <aside className="grid gap-[var(--space-24)] content-start">
             <div className="tb-panel">
-              <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>&gt; People you can reach at {info.name}</p>
+              <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>&gt; Most likely to refer you at {info.name}</p>
               {top.length === 0 ? (
                 <p className="body-sm" style={{ color: "var(--ink-muted)", margin: "var(--space-12) 0 0" }}>
                   Nobody at {info.name} in the pool yet. The strongest path to a posting is still a person — check the company page for alumni nearby.
                 </p>
               ) : (
                 <div className="grid gap-[var(--space-12)]" style={{ marginTop: "var(--space-12)" }}>
-                  {top.map((r) => <PersonCard key={r.personId} person={byId.get(r.personId)!} result={r} homophily={scorePersonByHomophily(student, byId.get(r.personId)!)} />)}
+                  {top.map((r) => <PersonCard key={r.personId} person={byId.get(r.personId)!} result={ladder.get(r.personId)!} referral={r} homophily={scorePersonByHomophily(student, byId.get(r.personId)!)} />)}
                 </div>
               )}
               <Link className="tb-link mono-label" href={`/dashboard/${info.slug}`} style={{ display: "inline-block", marginTop: "var(--space-16)" }}>

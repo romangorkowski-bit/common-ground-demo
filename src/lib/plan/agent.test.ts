@@ -8,7 +8,7 @@ import { learningOptionsLocal } from "./catalog";
 
 const positions = mockPositions(NOW);
 const ranked = rankPositions(student, positions, { now: NOW });
-const cyberRisk = positions.find((p) => p.id === "m02")!; // Deloitte Cyber Risk Intern: Security+ required, Sam is studying for it
+const cyberRisk = positions.find((p) => p.id === "m02")!; // Deloitte Cyber Risk Intern: Security+ required
 
 test("the bundled catalog answers by requirement, cheapest first", () => {
   const opts = learningOptionsLocal("security+");
@@ -42,8 +42,13 @@ test("every plan step is grounded in a catalog row or says the catalog has none"
 });
 
 test("a certification the student is already studying for is not a plan step", async () => {
-  const r = await runPlanAgent({ student, position: cyberRisk, ranked, mode: "mock" });
-  // Security+ is in Sam's certifications_in_progress -> status in_progress -> not "missing" -> not planned.
+  const studying = {
+    ...student,
+    profile: { ...student.profile, affinity: { ...student.profile.affinity, certifications_in_progress: ["Security+"] } },
+    facts: { ...student.facts, certifications_in_progress: ["Security+"] },
+  };
+  const r = await runPlanAgent({ student: studying, position: cyberRisk, ranked, mode: "mock" });
+  // Security+ in certifications_in_progress -> status in_progress -> not "missing" -> not planned.
   assert.ok(!r.plan.steps.some((s) => s.requirement === "Security+"));
 });
 

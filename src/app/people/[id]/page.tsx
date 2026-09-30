@@ -2,12 +2,13 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { DemoStrip, Nav, StatusFooter } from "@/components/tb/chrome";
 import { Avatar } from "@/components/avatar";
-import { TierBadge, tierColor } from "@/components/tier-badge";
+import { ReferralBadge, levelColor } from "@/components/referral-badge";
 import { scoreAffinity } from "@/lib/affinity/score";
 import { getPeopleProvider } from "@/lib/people";
 import { companyInfo } from "@/lib/companies";
 import { scorePersonByHomophily } from "@/lib/homophily";
 import { NO_FACTORS } from "@/lib/homophily/scorer";
+import { scoreReferral } from "@/lib/referral";
 import { getSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -24,8 +25,10 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
 
   const result = scoreAffinity({ profile: student.profile, facts: student.facts }, person);
   const homophily = scorePersonByHomophily(student, person);
-  // One list, strongest first: the ladder's evidence sentences carry a tier
-  // colour; the homophily drivers fill in anything the ladder did not phrase.
+  // Closure counts warm contacts at their company, so the rating needs the pool.
+  const referral = scoreReferral({ profile: student.profile, facts: student.facts }, person, people);
+  // One list, strongest first: the ladder's evidence sentences, then the
+  // homophily drivers that name anything the ladder did not phrase.
   const seen = new Set<string>();
   const inCommon = [
     ...result.evidence.map((e) => ({ text: e.label, rank: e.rank as number | null })),
@@ -66,7 +69,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
                 )}
               </div>
             </div>
-            <TierBadge rank={result.rank} score={result.score} />
+            <ReferralBadge result={referral} />
           </div>
         </div>
       </section>
@@ -75,29 +78,24 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
         <div className="tb-wrap grid gap-[var(--space-32)] lg:grid-cols-[1.35fr_1fr]">
           <div className="grid gap-[var(--space-24)] content-start">
             <div className="tb-panel">
-              <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>&gt; Why they came up</p>
-              <h2 className="title" style={{ textTransform: "uppercase", margin: "var(--space-12) 0 var(--space-16)" }}>
-                {result.tierLabel}
+              <div className="flex items-baseline justify-between gap-[var(--space-12)]">
+                <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>&gt; Why {referral.level} / 5 to refer you</p>
+                <ReferralBadge result={referral} />
+              </div>
+              <h2 className="title" style={{ textTransform: "uppercase", margin: "var(--space-12) 0 0" }}>
+                {referral.label} &middot; {referral.archetypeLabel}
               </h2>
-              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: "var(--space-16)" }}>
-                {result.evidence.length === 0 && (
-                  <li className="body-sm" style={{ color: "var(--ink-muted)" }}>
-                    Nothing beyond wanting to work there &mdash; the weakest reason on the list.
-                  </li>
-                )}
-                {result.evidence.map((e, i) => (
-                  <li key={i} style={{ display: "flex", gap: "var(--space-12)" }}>
-                    <span aria-hidden style={{ width: 8, height: 8, marginTop: 7, flexShrink: 0, background: tierColor(e.rank) }} />
-                    <div>
-                      <p className="body-sm" style={{ margin: 0 }}>{e.label}</p>
-                      <p className="mono-micro" style={{ color: "var(--ink-faint)", margin: "var(--space-4) 0 0" }}>
-                        Yours: {e.studentValue || "—"} &middot; Theirs: {e.personValue || "—"}
-                        {e.confidence < 1 && ` · ${Math.round(e.confidence * 100)}% sure`}
-                      </p>
-                    </div>
-                  </li>
-                ))}
+              <ul className="body-sm" style={{ margin: "var(--space-12) 0 0", paddingLeft: "1.2em", color: "var(--ink-muted)", display: "grid", gap: "var(--space-8)" }}>
+                {referral.reasons.map((r) => <li key={r}>{r}</li>)}
               </ul>
+              {referral.contactSoon && (
+                <p className="mono-label" style={{ color: "var(--alert)", margin: "var(--space-12) 0 0" }}>
+                  <span className="tb-led tb-led--alert" aria-hidden /> {referral.contactSoon}
+                </p>
+              )}
+              <p className="mono-micro" style={{ color: "var(--ink-faint)", margin: "var(--space-12) 0 0", textTransform: "none" }}>
+                5 has seen your work &middot; 4 an affinity group or close classmate &middot; 3 a warm tie &middot; 2 relevant but cold &middot; 1 no hook.
+              </p>
             </div>
 
             <div className="tb-panel">
@@ -135,7 +133,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
                 <ul style={{ margin: "var(--space-12) 0 0", padding: 0, listStyle: "none", display: "grid", gap: "var(--space-10)" }}>
                   {inCommon.map((c) => (
                     <li key={c.text} style={{ display: "flex", gap: "var(--space-12)", alignItems: "flex-start" }}>
-                      <span aria-hidden style={{ width: 8, height: 8, marginTop: 7, flexShrink: 0, background: c.rank ? tierColor(c.rank) : "var(--ink-faint)" }} />
+                      <span aria-hidden style={{ width: 8, height: 8, marginTop: 7, flexShrink: 0, background: c.rank ? levelColor(referral.level) : "var(--ink-faint)" }} />
                       <p className="body-sm" style={{ margin: 0 }}>{c.text}</p>
                     </li>
                   ))}
@@ -154,7 +152,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
                 <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>&gt; What would move them up</p>
                 <ul className="body-sm" style={{ margin: "var(--space-12) 0 0", padding: 0, listStyle: "none", color: "var(--ink-muted)", display: "grid", gap: "var(--space-8)" }}>
                   {result.unlockable.map((u) => (
-                    <li key={u.fieldId}>{u.because} — tell us and we can check tier {u.rank}.</li>
+                    <li key={u.fieldId}>{u.because} — tell us and they may rate higher.</li>
                   ))}
                 </ul>
                 <Link className="tb-btn tb-btn--sm mono-label" href="/intake" style={{ marginTop: "var(--space-16)" }}>
@@ -169,8 +167,8 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       <StatusFooter
         live={!demo}
         readings={[
-          { label: "Tier", value: String(result.rank) },
-          { label: "Score", value: `${Math.round(result.score)} / 100` },
+          { label: "Likely to refer", value: `${referral.level} / 5` },
+          { label: "Type", value: referral.archetypeLabel },
           { label: "Evidence", value: String(result.evidence.length) },
           { label: "Source", value: person.source },
         ]}

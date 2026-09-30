@@ -6,10 +6,10 @@ import { rankPeople, scoreAffinity } from "./score";
 import type { Person } from "./types";
 
 test("more shared organisations scores higher, but stays in the same tier", () => {
-  const one: Person = { ...p2, education: [{ ...p2.education[0], activities: ["Beta Alpha Psi"] }] };
+  const one: Person = { ...p2, education: [{ ...p2.education[0], activities: ["Delta Sigma Pi"] }] };
   const two: Person = {
     ...p2,
-    education: [{ ...p2.education[0], activities: ["Beta Alpha Psi", "Consulting Club"] }],
+    education: [{ ...p2.education[0], activities: ["Delta Sigma Pi", "Investment Club"] }],
   };
   const a = scoreAffinity(student, one, { now: NOW });
   const b = scoreAffinity(student, two, { now: NOW });
@@ -21,7 +21,7 @@ test("more shared organisations scores higher, but stays in the same tier", () =
 
 test("corroboration breaks ties inside a band and never across one", () => {
   const plain = { ...p2, id: "plain" };
-  const alsoHometown: Person = { ...p2, id: "also", hometown: "Richmond, VA" };
+  const alsoHometown: Person = { ...p2, id: "also", hometown: "Norfolk, VA" };
 
   const a = scoreAffinity(student, plain, { now: NOW });
   const b = scoreAffinity(student, alsoHometown, { now: NOW });
@@ -35,8 +35,8 @@ test("corroboration breaks ties inside a band and never across one", () => {
 test("evidence names the actual thing in common", () => {
   const r = scoreAffinity(student, p2, { now: NOW });
   assert.equal(r.evidence[0].kind, "org");
-  assert.match(r.evidence[0].label, /Beta Alpha Psi/);
-  assert.match(r.outreach.opener, /Beta Alpha Psi/);
+  assert.match(r.evidence[0].label, /Delta Sigma Pi/);
+  assert.match(r.outreach.opener, /Delta Sigma Pi/);
 });
 
 test("a missing fact is reported as the tier it would have unlocked", () => {
@@ -47,7 +47,7 @@ test("a missing fact is reported as the tier it would have unlocked", () => {
   const unlock = r.unlockable.find((u) => u.fieldId === "hometown");
   assert.ok(unlock, "should have flagged hometown as unlockable");
   assert.equal(unlock!.rank, 5);
-  assert.match(unlock!.because, /Richmond/);
+  assert.match(unlock!.because, /Norfolk/);
 });
 
 test("demand is aggregated across everyone, for ordering the questions", () => {

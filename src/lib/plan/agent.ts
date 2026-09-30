@@ -5,6 +5,8 @@ import { chat, parseArguments, type ChatMessage, type ToolSpec } from "@/lib/dat
 import type { Fabrication } from "@/lib/ai/fabrication-check";
 import { positionGaps, rankPositions, type Gap, type Position, type RankedPosition } from "@/lib/positions";
 import { learningOptionsLocal, learningOptionsWarehouse, type LearningOption } from "./catalog";
+import { analyzeJob } from "@/lib/tailor/analysis";
+import { liveMetrics } from "@/lib/tailor/refs";
 import { rewriteResume } from "./rewrite";
 
 /**
@@ -170,7 +172,7 @@ export async function runPlanAgent(input: {
           seen.set(req, opts);
           result = opts.map(({ id, title, provider, kind, cost_usd, weeks, note }) => ({ id, title, provider, kind, cost_usd, weeks, note }));
         } else if (name === "rewrite_resume") {
-          const r = await timed(name, {}, () => rewriteResume(student.profile, position),
+          const r = await timed(name, {}, () => rewriteResume(student.profile, position, { analysis: analyzeJob(student, position), metrics: liveMetrics(student.profile, student.facts.metrics) }),
             (v) => v.resume ? `${v.resume.changes.length} edits, ${v.fabrications.length} fabrication(s) caught, ${v.attempts} attempt(s)` : `failed: ${v.error}`);
           resume = r.resume; fabrications = r.fabrications; rewriteError = r.error;
           result = { ok: Boolean(r.resume), changes: r.resume?.changes.length ?? 0, fabrications_caught: r.fabrications.length };

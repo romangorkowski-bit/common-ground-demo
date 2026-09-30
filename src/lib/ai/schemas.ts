@@ -45,7 +45,6 @@ export const ResumeAffinitySchema = z.object({
   prior_employers: z.array(z.string()),
   clients_and_programs: z.array(z.string()).describe("Named clients, agencies or internal programmes worked with"),
   certifications_in_progress: z.array(z.string()).describe("Held or in progress; 'studying for' counts"),
-  clearance: z.string().nullable(),
 });
 export type ResumeAffinity = z.infer<typeof ResumeAffinitySchema>;
 
@@ -102,6 +101,24 @@ export const TailoredResumeSchema = z.object({
     z.object({
       change: z.string(),
       rationale: z.string(),
+      /** The line as the profile has it, and as the resume now has it. Null when the edit is a reorder. */
+      before: z.string().nullable(),
+      after: z.string().nullable(),
+    }),
+  ),
+  /** Posting keywords worked in because the profile already supports them. Never a new claim. */
+  keywordsAdded: z.array(z.string()),
+  /**
+   * Bullets with no number, and the question that would give them one. The
+   * bullet-writer guide wants a metric in every bullet; this app will not
+   * invent one, so it asks the student instead.
+   */
+  metricPrompts: z.array(
+    z.object({
+      bulletRef: z.string(),
+      bullet: z.string(),
+      question: z.string(),
+      unit: z.string(),
     }),
   ),
 });
@@ -141,6 +158,19 @@ export type IntakeEvent = z.infer<typeof IntakeEventSchema>;
 
 export const TransitionSchema = z.object({ from: z.string(), to: z.string() });
 
+/**
+ * A number the student gave for one bullet ("about 1,200 survey responses").
+ * Keyed by bullet ref; `bullet` is the text it was answered for, so an answer
+ * is dropped rather than misapplied once a new resume changes that bullet.
+ */
+export const MetricAnswerSchema = z.object({
+  value: z.string(),
+  unit: z.string(),
+  bullet: z.string(),
+  answeredAt: z.string(),
+});
+export type MetricAnswer = z.infer<typeof MetricAnswerSchema>;
+
 export const AffinityFactsSchema = z.object({
   school_canonical: z.string().nullable(),
   school_grad_year: z.string().nullable(),
@@ -164,8 +194,9 @@ export const AffinityFactsSchema = z.object({
   target_function: z.string().nullable(),
   target_seniority: z.string().nullable(),
   desired_transition: TransitionSchema.nullable(),
-  clearance: z.string().nullable(),
   certifications_in_progress: z.array(z.string()),
+  /** Not an affinity fact: numbers for resume bullets, answered on the resume page. */
+  metrics: z.record(z.string(), MetricAnswerSchema).default({}),
 });
 export type AffinityFacts = z.infer<typeof AffinityFactsSchema>;
 
@@ -176,8 +207,8 @@ export const EMPTY_FACTS: AffinityFacts = Object.freeze({
   prior_employers: [], clients_and_programs: [], hometown: null, high_school: null,
   communities: [], technical_domains: [], interests: [], projects_public: [],
   events: [], target_companies: [], target_roles: [], target_function: null,
-  target_seniority: null, desired_transition: null, clearance: null,
-  certifications_in_progress: [],
+  target_seniority: null, desired_transition: null,
+  certifications_in_progress: [], metrics: {},
 }) as AffinityFacts;
 
 /**

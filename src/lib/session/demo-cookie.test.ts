@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
 import { student } from "@/lib/affinity/__fixtures__/cast";
+import { deflateRawSync } from "node:zlib";
 import { EMPTY_FACTS } from "@/lib/ai/schemas";
 import { DEFAULT_WEIGHTS } from "@/lib/homophily/scorer";
 import { decodeStudent, encodeStudent } from "./demo-cookie";
@@ -51,4 +52,9 @@ test("missing, truncated or foreign cookies read as no session, never a throw", 
 test("an empty questionnaire is a few hundred bytes", () => {
   const fresh = { ...answered, facts: { ...EMPTY_FACTS }, meta: {}, intakeCompletedAt: null };
   assert.equal(encodeStudent(fresh, student.profile).length, 1);
+});
+
+test("a crafted cookie that inflates to megabytes is refused, not inflated", () => {
+  const bomb = deflateRawSync(Buffer.alloc(20 * 1024 * 1024, 32), { level: 9 }).toString("base64url");
+  assert.equal(decodeStudent([bomb], student.profile), null);
 });

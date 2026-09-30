@@ -13,7 +13,7 @@ const allGaps = () => computeGaps({
     affinity: {
       school_raw: null, majors: [], minors: [], student_orgs: [], greek: [],
       case_competitions: [], programs: [], prior_employers: [],
-      clients_and_programs: [], certifications_in_progress: [], clearance: null,
+      clients_and_programs: [], certifications_in_progress: [],
     },
     experience: [], projects: [], targets: { roles: [], locations: [], industries: [] },
   },

@@ -13,7 +13,7 @@ const full = {
 test("a row written by the app comes back whole", () => {
   const r = revive(JSON.stringify(full))!;
   assert.equal(r.profile.full_name, "Sam Rivera");
-  assert.equal(r.facts.hometown, "Richmond, VA");
+  assert.equal(r.facts.hometown, "Norfolk, VA");
   assert.equal(r.meta.hometown.source, "answer");
   assert.equal(r.intakeCompletedAt, full.intakeCompletedAt);
   assert.equal(r.email, "sam.rivera@vt.edu");

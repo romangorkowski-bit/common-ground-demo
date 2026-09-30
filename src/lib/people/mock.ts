@@ -1,5 +1,5 @@
 import { canonical, sameEntity } from "@/lib/affinity/normalize";
-import { cast as fixtureCast } from "@/lib/affinity/__fixtures__/cast";
+import { cast as ladderCast, referralCast } from "@/lib/affinity/__fixtures__/cast";
 import type { Person } from "@/lib/affinity/types";
 import { demoShiftMs, shiftIso } from "@/lib/demo-clock";
 import type { PeopleProvider, PeopleQuery } from "./types";
@@ -9,6 +9,9 @@ import type { PeopleProvider, PeopleQuery } from "./types";
  * as from the day the fixtures were written, so a post "three days ago"
  * stays three days old and the decaying tiers never fade out of the demo.
  */
+/** The ladder's eleven, plus the three the referral rating needs. */
+const fixtureCast: readonly Person[] = [...ladderCast, ...referralCast];
+
 export function currentCast(now = Date.now()): Person[] {
   const shift = demoShiftMs(now);
   if (shift === 0) return [...fixtureCast];
@@ -21,7 +24,8 @@ export function currentCast(now = Date.now()): Person[] {
 }
 
 /**
- * The stage-safe provider: the same eleven people the ladder test asserts on.
+ * The stage-safe provider: the eleven people the ladder test asserts on, plus
+ * the three the referral rating test does.
  * If the demo drifts from the test, the test breaks — which is the point.
  */
 export const mockPeopleProvider: PeopleProvider = {

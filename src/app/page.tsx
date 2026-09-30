@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Nav, StatusFooter } from "@/components/tb/chrome";
 import { Hero } from "@/components/tb/hero";
 import { LiveClock } from "@/components/tb/live-clock";
-import { TIERS } from "@/lib/affinity/tiers";
 import { FIELDS } from "@/lib/intake/fields";
 import { getSession } from "@/lib/session";
 
@@ -28,7 +27,7 @@ export default async function LandingPage() {
         picture="/hands.png"
         marble="/marble.png"
         head={<>Find genuine<br />connections.</>}
-        lines={[`> ranking ${TIERS.filter((t) => t.inScope).length} kinds of common ground_`]}
+        lines={["> rating every connection 1 to 5_"]}
         note="Two minutes &middot; We only ask what your resume does not already say"
       >
         <Link className="tb-btn tb-btn--solid mono-label" href={start}>{demo ? "Try the demo" : student ? "Upload your resume" : "Make an account"} &#8599;</Link>
@@ -40,9 +39,9 @@ export default async function LandingPage() {
             Everything on it becomes something we can match on. Then we ask, once, for what a
             resume never carries.
           </Point>
-          <Point n="02" title="We rank people, not postings">
-            Eleven levels of common ground, strongest first. A shared fraternity beats a shared
-            industry. Every result shows the fact that produced it.
+          <Point n="02" title="We rank who will refer you">
+            Everyone gets a 1 to 5: someone who has seen your work beats a close classmate, who
+            beats a stranger in your field. Every rating says why.
           </Point>
           <Point n="03" title="You send the message">
             We draft an opening line from what you share. We never send anything.
@@ -67,7 +66,7 @@ export default async function LandingPage() {
       <StatusFooter
         live={!demo}
         readings={[
-          { label: "Tiers ranked", value: String(TIERS.filter((t) => t.inScope).length) },
+          { label: "Rating", value: "1 to 5" },
           { label: "Questions", value: `${FIELDS.length} max` },
           { label: "UTC", value: <LiveClock zone="utc" /> },
           { label: "Local", value: <LiveClock /> },

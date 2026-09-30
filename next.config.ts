@@ -15,6 +15,12 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // The resume skill guides are read from disk at runtime (src/lib/tailor/skills.ts),
+  // which the tracer cannot see from the import graph. The plan agent on the
+  // opening page uses them too.
+  outputFileTracingIncludes: {
+    "/jobs/**": ["src/lib/tailor/skills/*.md"],
+  },
   async headers() {
     return [{ source: "/(.*)", headers: SECURITY_HEADERS }];
   },

@@ -12,7 +12,7 @@ const position: Position = {
   requirements: [
     { requirement: "Python", kind: "skill", required: true },          // Sam has it
     { requirement: "Excel modeling", kind: "skill", required: false },  // Sam lacks it
-    { requirement: "Security+", kind: "certification", required: true }, // Sam is studying for it
+    { requirement: "Google Data Analytics Certificate", kind: "certification", required: true }, // Sam is studying for it
     { requirement: "PMP", kind: "certification", required: true },       // Sam lacks it
     { requirement: "Bachelor's in business", kind: "degree", required: true }, // never reported
   ],
@@ -26,7 +26,7 @@ test("a skill the student lists is not a gap; a missing one is", () => {
 
 test("a certification in progress is reported as in_progress, not missing", () => {
   const gaps = positionGaps(student, position);
-  const sec = gaps.find((g) => g.requirement === "Security+");
+  const sec = gaps.find((g) => g.requirement === "Google Data Analytics Certificate");
   assert.equal(sec?.status, "in_progress");
 });
 
@@ -36,7 +36,7 @@ test("degree and experience lines are never reported", () => {
 
 test("hard blockers come first, certifications before skills, then alphabetical", () => {
   const gaps = positionGaps(student, position);
-  assert.deepEqual(gaps.map((g) => g.requirement), ["PMP", "Security+", "Excel modeling"]);
+  assert.deepEqual(gaps.map((g) => g.requirement), ["Google Data Analytics Certificate", "PMP", "Excel modeling"]);
 });
 
 test("the headline gap is the hard-required certification the student does not have", () => {

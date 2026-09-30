@@ -1,4 +1,6 @@
+import Link from "next/link";
 import type { AgentResult } from "@/lib/plan/agent";
+import { TailoredResumeView } from "./tailored-resume-view";
 
 const money = (n: number | null) => (n == null ? "—" : n === 0 ? "free" : `$${n.toLocaleString()}`);
 
@@ -7,6 +9,7 @@ const money = (n: number | null) => (n == null ? "—" : n === 0 ? "free" : `$${
  * trace is the part that makes the other two believable.
  */
 export function PlanResult({ result }: { result: AgentResult }) {
+  const tailorHref = `/jobs/${result.plan.positionId}/resume`;
   const { plan, resume, fabrications, trace } = result;
   return (
     <div className="grid gap-[var(--space-24)]" style={{ marginTop: "var(--space-24)" }}>
@@ -46,44 +49,14 @@ export function PlanResult({ result }: { result: AgentResult }) {
         {!resume ? (
           <p className="body-sm" style={{ margin: "var(--space-12) 0 0", color: "var(--ink-muted)" }}>
             {result.mode === "fallback" && result.model.startsWith("none")
-              ? "In the full version a model rewrites your resume for this role, and every employer, title and date is checked against your profile. This demo runs without a model, so the plan above is computed and the rewrite is skipped."
-              : "The rewrite did not come back this run. The plan above stands; try again for the resume."}
+              ? <>This demo runs without a model, so the agent skips the rewrite. The <Link className="tb-link" href={tailorHref}>resume tailor</Link> still fits your resume to this posting, following the same four guides with rules instead of a model.</>
+              : <>The rewrite did not come back this run. The plan above stands; try again, or open the <Link className="tb-link" href={tailorHref}>resume tailor</Link>.</>}
           </p>
         ) : (
           <>
-            {fabrications.length > 0 && (
-              <p className="body-sm" style={{ margin: "var(--space-12) 0 0", padding: "var(--space-12)", border: "var(--border-1) solid var(--rule-strong)", background: "var(--canvas-raised)" }}>
-                <span className="mono-label" style={{ color: "var(--alert)" }}>Check these before sending &mdash; </span>
-                the fabrication check flagged {fabrications.length}: {fabrications.map((f) => `${f.value} (${f.detail})`).join("; ")}
-              </p>
-            )}
-            <p className="body-sm" style={{ margin: "var(--space-12) 0 0" }}>{resume.summary}</p>
-            <p className="mono-micro" style={{ margin: "var(--space-12) 0 0", color: "var(--ink-subtle)", textTransform: "none" }}>Skills: {resume.skills.join(" · ")}</p>
-            {resume.experience.map((e) => (
-              <div key={`${e.employer}-${e.title}`} style={{ marginTop: "var(--space-16)" }}>
-                <p className="title" style={{ margin: 0, textTransform: "uppercase" }}>{e.title} <span style={{ color: "var(--ink-faint)" }}>&middot; {e.employer}</span></p>
-                <p className="mono-micro" style={{ margin: "2px 0 0", color: "var(--ink-faint)" }}>{[e.start, e.end].filter(Boolean).join(" – ")}</p>
-                <ul className="body-sm" style={{ margin: "var(--space-8) 0 0", paddingLeft: "1.2em", color: "var(--ink-muted)" }}>
-                  {e.bullets.map((b, i) => <li key={i}>{b}</li>)}
-                </ul>
-              </div>
-            ))}
-            {resume.projects.map((p) => (
-              <div key={p.name} style={{ marginTop: "var(--space-16)" }}>
-                <p className="title" style={{ margin: 0, textTransform: "uppercase" }}>{p.name}</p>
-                <ul className="body-sm" style={{ margin: "var(--space-8) 0 0", paddingLeft: "1.2em", color: "var(--ink-muted)" }}>
-                  {p.bullets.map((b, i) => <li key={i}>{b}</li>)}
-                </ul>
-              </div>
-            ))}
-            <div className="tb-rule" style={{ marginTop: "var(--space-16)", paddingTop: "var(--space-12)" }}>
-              <p className="mono-label" style={{ margin: 0, color: "var(--ink-subtle)" }}>What changed</p>
-              <ul className="mono-micro" style={{ margin: "var(--space-8) 0 0", padding: 0, listStyle: "none", display: "grid", gap: "var(--space-4)", textTransform: "none" }}>
-                {resume.changes.map((c, i) => <li key={i}><span style={{ color: "var(--ink)" }}>{c.change}</span> <span style={{ color: "var(--ink-faint)" }}>&mdash; {c.rationale}</span></li>)}
-              </ul>
-            </div>
+            <TailoredResumeView resume={resume} fabrications={fabrications} />
             <p className="mono-micro" style={{ margin: "var(--space-16) 0 0", color: "var(--ink-faint)", textTransform: "none" }}>
-              Every employer, title, date and project above was checked against your confirmed profile. Nothing here is sent anywhere; you do that.
+              Every employer, title, date, number and project above was checked against your confirmed profile. Nothing here is sent anywhere; you do that. <Link className="tb-link" href={tailorHref}>Open it in the resume tailor</Link> to answer its questions and download the PDF.
             </p>
           </>
         )}

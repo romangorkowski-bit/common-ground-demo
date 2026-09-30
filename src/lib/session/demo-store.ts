@@ -63,15 +63,15 @@ function seed(): StoredStudent {
       ...fixtureStudent.profile,
       affinity: {
         ...fixtureStudent.profile.affinity,
-        student_orgs: ["Consulting Club"],
+        student_orgs: ["Investment Club"],
         greek: [],
         case_competitions: [],
         programs: [],
         clients_and_programs: [],
       },
       uncertainties: [
-        "The activities section lists “BAP”. That is probably Beta Alpha Psi, but the document never says so.",
-        `Two end dates overlap in summer ${2026 + demoYearShift()} — the Acme internship and the campus job may have run at the same time.`,
+        "The activities section lists “DSP”. That is probably Delta Sigma Pi, but the document never says so.",
+        `Two end dates overlap in summer ${2026 + demoYearShift()} — the Blue Ridge internship and the campus job may have run at the same time.`,
       ],
     }),
     facts: { ...EMPTY_FACTS },

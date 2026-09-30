@@ -17,9 +17,10 @@
   --font-mono: var(--font-space-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* Tier hues: the ladder rendered as colour. Interpolated between the system's
-   own `signal` and `alert` so no new palette enters the system, and restated
-   under dark because both endpoints lift there. */
+/* Connection hues, signal to alert. Named for the ladder's rungs they were
+   drawn for; the 1-5 referral rating uses five of them (referral-badge.tsx).
+   Interpolated between the system's own `signal` and `alert` so no new palette
+   enters the system, and restated under dark because both endpoints lift there. */
 :root, [data-theme="light"] {
   --tier-2: #0d6b3c;  --tier-3: #2f6b30;  --tier-4: #4a6a24;
   --tier-5: #63661a;  --tier-7: #7c6112;  --tier-8: #935a0d;

@@ -9,6 +9,7 @@ import { KNOWN_COMPANIES, companyInfo, resolveCompanySlug, sameCompany } from "@
 import { loadCompanyPool, peopleAt, positionsAt } from "@/lib/companies/pool";
 import { HomophilyWeightsForm } from "@/components/homophily-weights-form";
 import { rankPeopleByHomophily } from "@/lib/homophily";
+import { rankByReferral } from "@/lib/referral";
 import { computeGaps } from "@/lib/intake/gaps";
 import { getPositionsProvider, rankPositions } from "@/lib/positions";
 import { getSession } from "@/lib/session";
@@ -17,7 +18,7 @@ import { chooseCompany } from "../actions";
 export const dynamic = "force-dynamic";
 
 /**
- * One company: everyone there, strongest connection first, plus its openings
+ * One company: everyone there, most likely to refer first, plus its openings
  * and the questions that would move people up. The "everyone" ranking the
  * old dashboard led with survives only as a short tail — strong ties at other
  * companies are still worth a message, they are just not what this page is
@@ -28,8 +29,10 @@ export default async function CompanyPage({
 }: { params: Promise<{ company: string }>; searchParams: Promise<{ rank?: string }> }) {
   const { company: slug } = await params;
   const { rank } = await searchParams;
-  // Two scorers, one page. The ladder finds the single best opener; the
-  // homophily scorer adds up everything shared, with the student's weights.
+  // Two orders, one page. By default, who is most likely to refer the student
+  // (src/lib/referral, 1 to 5); or the homophily total, with their weights.
+  // The ladder still runs underneath: it writes the opening lines and decides
+  // which questions would move people up.
   const byHomophily = rank === "homophily";
   const { student, demo } = await getSession();
   if (!student) redirect(`/sign-in?next=/dashboard/${slug}`);
@@ -48,22 +51,28 @@ export default async function CompanyPage({
   const here = peopleAt(pool.people, name);
   const { results, demand } = rankPeople(scorable, here);
   const byId = new Map(pool.people.map((p) => [p.id, p]));
-  const strong = results.filter((r) => r.rank <= 5);
-  const best = results[0];
 
   const homophily = rankPeopleByHomophily(student, here);
   const homophilyById = new Map(homophily.map((h) => [h.personId, h]));
   const ladderById = new Map(results.map((r) => [r.personId, r]));
+  // Rated against the whole pool: closure counts warm contacts per company,
+  // and the "elsewhere" list below needs the same ratings.
+  const rated = rankByReferral(scorable, pool.people);
+  const referralById = new Map(rated.map((r) => [r.personId, r]));
+  const referral = rated.filter((r) => here.some((p) => p.id === r.personId));
+  const strong = referral.filter((r) => r.level >= 3);
+  const best = referral[0];
   // What the main list shows, in the chosen order.
-  const listed = byHomophily
-    ? homophily.map((h) => ({ id: h.personId, result: ladderById.get(h.personId)!, homophily: h }))
-    : results.map((r) => ({ id: r.personId, result: r, homophily: homophilyById.get(r.personId) }));
+  const listed = (byHomophily ? homophily.map((h) => h.personId) : referral.map((r) => r.personId))
+    .map((id) => ({ id, result: ladderById.get(id)!, homophily: homophilyById.get(id), referral: referralById.get(id)! }));
   const here_ = `/dashboard/${slug}`;
 
-  // Strong ties elsewhere: a shared fraternity is a shared fraternity
-  // wherever they work. Shown small, after the company's own people.
-  const elsewhere = rankPeople(scorable, pool.people.filter((p) => !here.includes(p)))
-    .results.filter((r) => r.rank <= 7).slice(0, 4);
+  // Strong ties elsewhere: someone who managed you, a classmate, a real hook,
+  // wherever they work now. They rate low here (not a company you picked),
+  // but they are the people to ask who else to talk to.
+  const WARM = new Set(["sponsor", "advocate", "peer", "warm_tie"]);
+  const ladderAll = new Map(rankPeople(scorable, pool.people.filter((p) => !here.includes(p))).results.map((r) => [r.personId, r]));
+  const elsewhere = rated.filter((r) => ladderAll.has(r.personId) && WARM.has(r.archetype)).slice(0, 4);
 
   const gaps = computeGaps({ profile: student.profile, facts: student.facts, meta: student.meta, demand });
 
@@ -102,8 +111,8 @@ export default async function CompanyPage({
             {results.length === 0
               ? "Nobody here yet in the people we can reach. Add the company anyway and check back — or pick one where we have someone."
               : strong.length > 0
-                ? `${strong.length} of them share a school, an organisation, an employer or a hometown with you. Start there.`
-                : "Nothing above a shared industry yet. The questions below would change that."}
+                ? `${strong.length} of them rate 3 or better out of 5 to refer you. Start with them.`
+                : "Nobody rates above 2 out of 5 yet. The questions below are what would change that."}
           </p>
         </div>
       </section>
@@ -120,12 +129,12 @@ export default async function CompanyPage({
                 <p className="mono-micro" style={{ color: "var(--ink-faint)", margin: 0 }}>
                   {byHomophily
                     ? "Most in common first \u00b7 every shared factor adds its weight"
-                    : "Strongest connection first \u00b7 every card names the fact that produced it"}
+                    : "Most likely to refer you first \u00b7 1 to 5 \u00b7 every card says why"}
                 </p>
               </div>
               <div className="flex gap-[var(--space-8)]" role="group" aria-label="Rank by">
                 <Link href={here_} className={`tb-btn tb-btn--sm mono-label${byHomophily ? "" : " tb-btn--solid"}`}
-                  aria-current={byHomophily ? undefined : "true"}>Best opener</Link>
+                  aria-current={byHomophily ? undefined : "true"}>Most likely to refer</Link>
                 <Link href={`${here_}?rank=homophily`} className={`tb-btn tb-btn--sm mono-label${byHomophily ? " tb-btn--solid" : ""}`}
                   aria-current={byHomophily ? "true" : undefined}>Most in common</Link>
               </div>
@@ -136,8 +145,9 @@ export default async function CompanyPage({
               </div>
             )}
             <div className="tb-cards tb-cards--2">
-              {listed.slice(0, 120).map(({ id, result, homophily: h }) => (
-                <PersonCard key={id} person={byId.get(id)!} result={result} homophily={h} badge={byHomophily ? "homophily" : "tier"} />
+              {listed.slice(0, 120).map(({ id, result, homophily: h, referral: ref }) => (
+                <PersonCard key={id} person={byId.get(id)!} result={result} homophily={h} referral={ref}
+                  badge={byHomophily ? "homophily" : "referral"} />
               ))}
             </div>
             {results.length > 120 && (
@@ -209,7 +219,7 @@ export default async function CompanyPage({
               Not at {info.name}, but the connection is real &middot; worth a message anyway
             </p>
             <div className="tb-cards tb-cards--2">
-              {elsewhere.map((r) => <PersonCard key={r.personId} person={byId.get(r.personId)!} result={r} />)}
+              {elsewhere.map((r) => <PersonCard key={r.personId} person={byId.get(r.personId)!} result={ladderAll.get(r.personId)!} referral={r} />)}
             </div>
           </div>
         </section>
@@ -220,10 +230,10 @@ export default async function CompanyPage({
         readings={[
           { label: "Company", value: info.name },
           { label: "People here", value: String(results.length) },
-          { label: "Ranked by", value: byHomophily ? "homophily" : "ladder" },
+          { label: "Ranked by", value: byHomophily ? "homophily" : "likely to refer" },
           { label: "Strongest", value: byHomophily
               ? (homophily[0] ? `${homophily[0].totalScore} pts` : "None")
-              : (best ? `Tier ${best.rank} / ${Math.round(best.score)}` : "None") },
+              : (best ? `${best.level} / 5` : "None") },
           { label: "Questions left", value: String(gaps.length) },
           { label: "Source", value: pool.peopleSource },
         ]}

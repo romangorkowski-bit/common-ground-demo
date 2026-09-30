@@ -2,12 +2,14 @@ import Link from "next/link";
 import type { AffinityResult, Person } from "@/lib/affinity/types";
 import { NO_FACTORS, type HomophilyResult } from "@/lib/homophily/scorer";
 import { Avatar } from "./avatar";
+import type { ReferralResult } from "@/lib/referral";
 import { HomophilyBadge } from "./homophily-badge";
-import { TierBadge } from "./tier-badge";
+import { ReferralBadge } from "./referral-badge";
 
 /**
- * One person. The body is what you have in common, whichever scorer ranked
- * the list; `homophily` swaps the badge and adds its drivers to the lines.
+ * One person. The badge is how likely they are to refer the student (1 to 5),
+ * or the homophily total when the list is sorted that way; the body is why,
+ * then what they share.
  */
 /** Ladder evidence that is genuinely shared with the resume: not a post, an event, or "same field". */
 const SHARED_KINDS = new Set(["school", "org", "employer", "client", "place", "interest"]);
@@ -34,12 +36,16 @@ export function inCommonLines(result: AffinityResult, homophily?: HomophilyResul
   return out.slice(0, max);
 }
 
-export function PersonCard({ person, result, homophily, badge = "tier" }: {
-  person: Person; result: AffinityResult; homophily?: HomophilyResult;
+export function PersonCard({ person, result, homophily, referral, badge = "referral" }: {
+  /** `result` is the ladder's evidence: what the two share, in sentences. */
+  person: Person; result: AffinityResult; homophily?: HomophilyResult; referral: ReferralResult;
   /** Which score the badge shows — the one the list is ordered by. */
-  badge?: "tier" | "homophily";
+  badge?: "referral" | "homophily";
 }) {
-  const lines = inCommonLines(result, homophily);
+  const why = badge === "referral" ? `${referral.archetypeLabel}: ${referral.reasons[0]}` : null;
+  const lines = why
+    ? [why, ...inCommonLines(result, homophily).filter((l) => !why.includes(l))].slice(0, 3)
+    : inCommonLines(result, homophily);
   return (
     <Link href={`/people/${person.id}`} className="tb-card">
       <div className="flex items-start justify-between gap-[var(--space-12)]">
@@ -52,7 +58,7 @@ export function PersonCard({ person, result, homophily, badge = "tier" }: {
             </p>
           </div>
         </div>
-        {badge === "homophily" && homophily ? <HomophilyBadge result={homophily} /> : <TierBadge rank={result.rank} score={result.score} />}
+        {badge === "homophily" && homophily ? <HomophilyBadge result={homophily} /> : <ReferralBadge result={referral} />}
       </div>
 
       {lines.length === 0 ? (

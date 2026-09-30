@@ -9,7 +9,7 @@ Built as a team project for a Databricks hackathon, September 2026.
 
 ![Landing page](docs/screenshots/landing.jpg)
 
-| People at a company, strongest connection first | One opening: what they want, where you stand |
+| People at a company, most likely to refer you first | One opening: what they want, where you stand |
 |---|---|
 | ![Company page](docs/screenshots/company.jpg) | ![Opening page](docs/screenshots/opening.jpg) |
 
@@ -43,9 +43,31 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 · Zod · Vites
 Databricks (Delta tables, SQL Statement API, `ai_query`, Unity Catalog functions, Genie) ·
 Supabase (auth and Postgres with row-level security, optional)
 
+## Who is likely to refer you (1 to 5)
+
+People are ranked by how likely they are to refer the student into a company they want
+(`src/lib/referral/`). It asks two things: will this person act on the student's behalf, and will
+their referral land at a company the student is targeting.
+
+| | | Who |
+|---|---|---|
+| 5 | Very likely | Worked at the student's employer at the same time, more senior: has seen their work |
+| 4 | Likely | Both named the same affinity organisation (SWE, NSBE, ...), or a close classmate: same school, within two years, same major or club |
+| 3 | Possible | A real hook from the ladder below (shared club, employer, hometown, interest, a recent post or event), or a fellow alum |
+| 2 | Unlikely | A campus recruiter, someone in the same field with no personal hook, or any stronger tie at a company the student is not targeting |
+| 1 | Long shot | Nothing in common yet |
+
+Then at most one step: up for two or more other warm contacts at the same company (several voices
+inside), or for someone only a few years ahead; down for a director or above on a cold ask. Only
+someone who has seen your work is a 5, and a recruiter never rises past 2. Affinity groups count
+only when both people named the same one; nothing is inferred about who anyone is. Within a level,
+the ladder's order holds. `referral.test.ts` pins each case.
+
 ## The ladder
 
-Everything keys off one ranked list of what makes a connection worth writing to, strongest first.
+The ladder no longer orders the lists, but it runs underneath: it finds the shared facts the
+rating reads, writes the suggested opening line, and decides which questions would move people up.
+It is one ranked list of what makes a connection worth writing to, strongest first.
 It lives as data in `src/lib/affinity/tiers.ts`, including the outreach guidance for each rung.
 
 | | |
@@ -112,7 +134,7 @@ about clubs. Two rules carry most of the weight:
   and the question never returns. Without that distinction the form nags forever.
 - Questions are ordered by real demand. When someone at a target company has a hometown and the
   student doesn't, the scorer emits an `unlockable`, and the question arrives saying *"we ask
-  because Elena Cruz is from Richmond."*
+  because Elena Cruz is from Norfolk."*
 
 ## Turning on accounts
 

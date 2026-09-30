@@ -55,7 +55,7 @@ export async function getSession(): Promise<Session> {
     affinity: studentRow?.resume_affinity ?? {
       school_raw: profileRow?.school ?? null, majors: [], minors: [], student_orgs: [],
       greek: [], case_competitions: [], programs: [], prior_employers: [],
-      clients_and_programs: [], certifications_in_progress: [], clearance: null,
+      clients_and_programs: [], certifications_in_progress: [],
     },
     uncertainties: studentRow?.uncertainties ?? [],
   };

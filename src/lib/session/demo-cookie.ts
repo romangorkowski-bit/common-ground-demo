@@ -17,13 +17,17 @@ import type { StoredStudent } from "./demo-store";
  *
  * Cookies are capped near 4 KB each, so the payload is deflated, base64url
  * encoded and split across `cg_s.0`, `cg_s.1`, ... Anything unreadable
- * (an old shape, a truncated chunk) decodes to null and the student starts
- * over rather than the page crashing.
+ * (an old shape, a truncated chunk, a crafted cookie that inflates past
+ * MAX_INFLATED) decodes to null and the student starts over rather than the
+ * page crashing or the server spending memory on it.
  */
 
 const PREFIX = "cg_s";
 const CHUNK = 3800;
-const MAX_CHUNKS = 8;
+/** Three chunks (~11 KB) stays well inside Node's 16 KB request-header limit, with room for everything else. */
+const MAX_CHUNKS = 3;
+/** A real session inflates to a few KB; a crafted cookie must not make the server inflate megabytes. */
+const MAX_INFLATED = 256 * 1024;
 const MAX_AGE = 60 * 60 * 24 * 30;
 
 type Payload = Omit<StoredStudent, "profile"> & { profile?: StudentProfile };
@@ -43,7 +47,7 @@ export function decodeStudent(chunks: string[], sampleProfile: StudentProfile): 
   if (chunks.length === 0) return null;
   let payload: Payload;
   try {
-    payload = JSON.parse(inflateRawSync(Buffer.from(chunks.join(""), "base64url")).toString("utf8"));
+    payload = JSON.parse(inflateRawSync(Buffer.from(chunks.join(""), "base64url"), { maxOutputLength: MAX_INFLATED }).toString("utf8"));
   } catch {
     return null;
   }

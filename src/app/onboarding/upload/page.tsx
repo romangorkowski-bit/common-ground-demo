@@ -66,7 +66,7 @@ export default async function UploadPage() {
               </form>
 
               <p className="mono-micro" style={{ color: "var(--ink-faint)", margin: "var(--space-24) 0 0", textTransform: "none" }}>
-                &gt; Sam Rivera &middot; Virginia Tech &middot; cybersecurity, aiming for consulting. Your answers stay in this browser.
+                &gt; Sam Rivera &middot; Virginia Tech &middot; finance, aiming for consulting. Your answers stay in this browser.
               </p>
             </>
           )}

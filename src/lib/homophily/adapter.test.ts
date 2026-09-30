@@ -15,12 +15,12 @@ test("spellings of one school and one employer match through the canonicaliser",
   // Institute and State University". Same fraternity, spelled the same.
   const dana = scorePersonByHomophily(sam, p2);
   assert.ok(dana.matchDrivers.some((d) => d.startsWith("Shared University: Virginia Tech (+5)")), dana.matchDrivers.join(" | "));
-  assert.ok(dana.matchDrivers.some((d) => d === "Shared Organization: Beta Alpha Psi (+20)"), dana.matchDrivers.join(" | "));
+  assert.ok(dana.matchDrivers.some((d) => d === "Shared Organization: Delta Sigma Pi (+20)"), dana.matchDrivers.join(" | "));
   assert.equal(dana.totalScore, 25);
 
-  // Marcus worked at Acme Analytics, where Sam interned.
+  // Marcus worked at Blue Ridge Research Group, where Sam interned.
   const marcus = scorePersonByHomophily(sam, p4);
-  assert.deepEqual(marcus.matchDrivers, ["Shared Past Employer: Acme Analytics (+30)"]);
+  assert.deepEqual(marcus.matchDrivers, ["Shared Past Employer: Blue Ridge Research (+30)"]);
   assert.equal(marcus.totalScore, 30);
 });
 

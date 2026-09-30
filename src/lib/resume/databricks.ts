@@ -31,7 +31,7 @@ Rules:
 - Normalise skills to their common names ("Python", "SQL", "Tableau") and drop duplicates.
 - grad_date must be an ISO date (YYYY-MM-DD). If only a term is given ("Spring 2027"), use the usual end of that term.
 - Record anything ambiguous or contradictory in "uncertainties" instead of guessing. That list is shown to the student to correct, so it is a feature, not a failure.
-- Fill "affinity" from what the resume prints under Activities, Leadership, Certifications or inside experience bullets: clubs and student organisations, Greek letters and honour societies, named programmes, fellowships and scholarships, case competitions, named clients or engagements, certifications (including ones in progress), and any clearance.
+- Fill "affinity" from what the resume prints under Activities, Leadership, Certifications or inside experience bullets: clubs and student organisations, Greek letters and honour societies, named programmes, fellowships and scholarships, case competitions, named clients or engagements, and certifications (including ones in progress).
 - Do not infer an affiliation from a company or school name. If the document does not say it, it did not happen.
 - If an abbreviation in the document is ambiguous, record it verbatim and put the ambiguity in "uncertainties". Only mention things that are actually in the document; never note that something is absent.
 - Do not attempt hometown, high school, communities, events or target companies. They are not on a resume, and a guessed hometown is worse than a blank one.
@@ -46,7 +46,7 @@ Reply with ONE JSON object and nothing else. No prose, no code fence. Use exactl
  "targets":{"roles":string[],"locations":string[],"industries":string[]},
  "affinity":{"school_raw":string|null,"majors":string[],"minors":string[],"student_orgs":string[],"greek":string[],
    "case_competitions":string[],"programs":string[],"prior_employers":string[],"clients_and_programs":string[],
-   "certifications_in_progress":string[],"clearance":string|null},
+   "certifications_in_progress":string[]},
  "uncertainties":string[]}`;
 
 /** Notes that describe something missing from the resume, which are never useful to show. */

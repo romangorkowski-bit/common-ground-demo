@@ -60,7 +60,7 @@ export default async function ReviewPage() {
           ]} />
           <Facts title="Study" items={[
             ["Majors", a.majors.join(", ")], ["Minors", a.minors.join(", ")],
-            ["Certifications", a.certifications_in_progress.join(", ")], ["Clearance", a.clearance],
+            ["Certifications", a.certifications_in_progress.join(", ")],
           ]} />
           <Facts title="Affiliations" items={[
             ["Clubs and orgs", a.student_orgs.join(", ")], ["Greek", a.greek.join(", ")],

@@ -4,8 +4,8 @@ import type { Position, PositionsProvider, PositionsQuery } from "./types";
 
 /**
  * The stage-safe openings: fifteen postings engineered around the demo student
- * (Virginia Tech, cybersecurity -> consulting, targets Deloitte and Databricks,
- * class of 2027, studying for Security+). Dates are relative to *today* so the
+ * (Virginia Tech, finance -> consulting, targets Deloitte and Databricks,
+ * class of 2027, studying for the Google Data Analytics Certificate). Dates are relative to *today* so the
  * timeline never ages: two windows are open now, several open inside 60 days,
  * one is upcoming, one already closed.
  */
@@ -29,7 +29,7 @@ export function mockPositions(now = Date.now()): Position[] {
       requirements: [req("Python", "skill"), req("SQL", "skill"), req("Excel modeling", "skill", false), req("Security+", "certification", false), req("Bachelor's in business, economics, or engineering", "degree")] },
     { ...base, id: "m02", title: "Cyber Risk Intern", company: "Deloitte", type: "internship", vertical: "consulting",
       location: "Arlington, VA", opensOn: d(40), closesOn: d(95), targetGradYears: [2027, 2028], url: "https://jobs.example.com/deloitte/m02",
-      description: "Cyber Risk practice; clearance-eligible candidates preferred.",
+      description: "Cyber Risk practice; audit and controls coursework preferred.",
       requirements: [req("Security+", "certification"), req("Python", "skill", false), req("Stakeholder management", "skill", false), req("Prior leadership role in a student org", "experience", false)] },
     { ...base, id: "m03", title: "Solutions Architect Intern", company: "Databricks", type: "internship", vertical: "swe",
       location: "Remote", opensOn: d(-5), closesOn: d(30), targetGradYears: [2027], url: "https://jobs.example.com/databricks/m03",

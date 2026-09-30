@@ -25,7 +25,7 @@ export const THEME_COPY: Readonly<Record<Theme, { title: string; subtitle: strin
 };
 
 /** Option sources resolved at render time against the canonical alias tables. */
-export type OptionSource = "school-canon" | "org-canon" | "seniority" | "function" | "clearance";
+export type OptionSource = "school-canon" | "org-canon" | "seniority" | "function";
 
 export type { OptionGroup } from "./options";
 

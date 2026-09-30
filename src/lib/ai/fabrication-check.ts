@@ -1,4 +1,4 @@
-import type { StudentProfile, TailoredResume } from "./schemas";
+import type { MetricAnswer, StudentProfile, TailoredResume } from "./schemas";
 
 /**
  * Structural check that a tailored resume invented nothing.
@@ -8,8 +8,10 @@ import type { StudentProfile, TailoredResume } from "./schemas";
  * every hard fact in the output is checked against the confirmed profile, and
  * anything unsupported is surfaced rather than silently shipped.
  *
- * Scope: verifiable identity facts (employers, titles, dates, school). Bullet
- * wording is intentionally not checked — rephrasing is the point of tailoring.
+ * Scope: verifiable identity facts (employers, titles, dates, school), skills
+ * and keywords, and every number. Bullet wording is otherwise not checked —
+ * rephrasing is the point of tailoring. Numbers are, because the bullet-writer
+ * guide asks for a metric in every bullet and a model will happily supply one.
  */
 
 export interface Fabrication {
@@ -20,9 +22,14 @@ export interface Fabrication {
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
+/** "1,200", "40%", "3.5" -> "1200", "40", "3.5". Leading zeros go, so "06" and "6" agree. */
+const numbersIn = (s: string): string[] =>
+  (s.match(/\d[\d,]*(?:\.\d+)?/g) ?? []).map((n) => String(Number(n.replace(/,/g, ""))));
+
 export function findFabrications(
   profile: StudentProfile,
   resume: TailoredResume,
+  metrics: Record<string, MetricAnswer> = {},
 ): Fabrication[] {
   const problems: Fabrication[] = [];
 
@@ -104,6 +111,38 @@ export function findFabrications(
         field: "skills",
         value: skill,
         detail: "skill is not claimed anywhere in the confirmed profile",
+      });
+    }
+  }
+  for (const keyword of resume.keywordsAdded) {
+    if (!known.has(norm(keyword))) {
+      problems.push({
+        field: "keywordsAdded",
+        value: keyword,
+        detail: "keyword is not supported by a skill, project or course in the profile",
+      });
+    }
+  }
+
+  // A number is allowed only if the profile already has it or the student
+  // typed it on the resume page. "~40%" from nowhere is the likeliest slip.
+  const allowed = new Set([
+    ...numbersIn(JSON.stringify(profile)),
+    ...Object.values(metrics).flatMap((m) => numbersIn(m.value)),
+  ]);
+  const lines = [
+    { field: "summary", text: resume.summary },
+    ...resume.experience.flatMap((e) => e.bullets.map((b) => ({ field: `experience.bullets (${e.employer})`, text: b }))),
+    ...resume.projects.flatMap((p) => p.bullets.map((b) => ({ field: `projects.bullets (${p.name})`, text: b }))),
+    ...resume.education.highlights.map((h) => ({ field: "education.highlights", text: h })),
+  ];
+  for (const { field, text } of lines) {
+    const invented = numbersIn(text).filter((n) => !allowed.has(n));
+    if (invented.length) {
+      problems.push({
+        field,
+        value: text,
+        detail: `${invented.join(", ")} is not in the profile or your answers`,
       });
     }
   }

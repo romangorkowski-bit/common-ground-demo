@@ -20,7 +20,6 @@ export const UNCERTAINTY_HINTS: ReadonlyArray<{ re: RegExp; fields: readonly str
   { re: /employer|company|intern|position|role|job/i,          fields: ["prior_employers"] },
   { re: /client|engagement|account|agency/i,                   fields: ["clients_and_programs"] },
   { re: /certif|licen[cs]/i,                                   fields: ["certifications_in_progress"] },
-  { re: /clearance/i,                                          fields: ["clearance"] },
   { re: /project|repo|paper|publication/i,                     fields: ["projects_public"] },
 ];
 
