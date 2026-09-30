@@ -47,7 +47,8 @@ export default async function IntakePage() {
               <p className="mono-micro" style={{ color: "var(--ink-faint)", margin: 0, textTransform: "none" }}>
                 Answers are yours alone and stay saved.{" "}
                 <button type="submit" className="tb-link mono-micro"
-                  style={{ background: "none", border: 0, padding: 0, cursor: "pointer", textTransform: "none" }}>
+                  style={{ background: "none", border: 0, padding: 0, cursor: "pointer", textTransform: "none",
+                    color: "var(--ink)", textDecoration: "underline", textUnderlineOffset: 3 }}>
                   Start the questions over
                 </button>
                 {" "}if you want a clean run.

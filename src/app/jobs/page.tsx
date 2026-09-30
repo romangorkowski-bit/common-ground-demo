@@ -111,7 +111,7 @@ export default async function JobsPage() {
             <p className="mono-micro" style={{ color: "var(--ink-faint)", margin: "0 0 var(--space-24)" }}>
               {student.facts.target_companies.join(" · ")} &middot; every posting there, whatever the category
             </p>
-            <div className="grid gap-[var(--space-16)] md:grid-cols-2">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-[var(--space-16)] md:grid-cols-2">
               {atTargets.map((r) => (
                 <OpeningRow key={r.position.id} ranked={r} gaps={gapsById.get(r.position.id) ?? positionGaps(scorable, r.position)} />
               ))}

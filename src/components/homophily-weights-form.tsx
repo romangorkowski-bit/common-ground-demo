@@ -15,7 +15,7 @@ export function HomophilyWeightsForm({ weights, returnTo }: { weights: Homophily
       <p className="body-sm" style={{ color: "var(--ink-muted)", margin: "var(--space-8) 0 var(--space-20)" }}>
         Each shared factor adds this many points, once per match. Set what matters to you.
       </p>
-      <div className="grid gap-[var(--space-16)] sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-[var(--space-16)] sm:grid-cols-2 lg:grid-cols-5">
         {WEIGHT_LABELS.map(({ key, label, hint }) => (
           <label key={key} className="block">
             <span className="mono-micro block" style={{ marginBottom: "var(--space-8)" }}>{label}</span>

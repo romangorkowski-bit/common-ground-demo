@@ -5,7 +5,12 @@ Students land jobs through human connection, not AI-blasted applications. Common
 club, same hometown, same career jump), asks the student only for the facts their resume didn't
 already give up, and shows what each internship asks for and how to close the gaps.
 
-Built as a team project for a Databricks hackathon, September 2026.
+Built as a team project for a Databricks hackathon, September 2026. My part is listed under
+[Credits](#credits).
+
+> **Status: work in progress.** The demo below runs end to end on sample data. Reading a real resume,
+> accounts and the live warehouse need keys and are not part of the public demo yet; see
+> [What is still in progress](#what-is-still-in-progress).
 
 ![Landing page](docs/screenshots/landing.jpg)
 
@@ -181,7 +186,7 @@ standing database of people who never signed up, which is also why tiers 1 and 6
 ## Checks
 
 ```bash
-npm test          # 184 tests
+npm test          # 221 tests
 npm run typecheck
 npm run lint
 ```
@@ -199,12 +204,27 @@ The ones worth knowing about:
   ever loops, a student can never finish.
 - `decay.test.ts` — stubs `Date.now` to throw, proving no predicate reads the clock.
 
+## What is still in progress
+
+- **The public demo runs on sample data.** Resume reading, accounts and the warehouse-backed people
+  pool are built but need API keys, so the demo starts from one sample student.
+- **Without a model, the plan agent and resume tailor run on rules.** They follow the same guides and
+  never invent anything, but they reorder and flag rather than rewrite.
+- **Dictation uses the browser's speech recognition**, so the mic button only shows in browsers that
+  have it (Chrome, Edge, Safari).
+- **Held and in-progress certifications share one field**, so the tailored resume marks every
+  certification "(in progress)" rather than risk overstating one.
+- **Next up:** a hosted demo link, and a single score per opening (today "Fit" and "Match %" measure
+  timing and skills separately).
+
 ## Credits
 
 A team project; the full commit history is preserved.
 
 - **Roman Gorkowski**: the connection ladder and its scorer, the homophily scorer, the computed
   questionnaire, the website and its Terminal Brutalist interface, resume reading with `ai_query`,
-  and this portfolio version of the demo.
+  the per-posting resume tailor and referral scoring, and this portfolio version of the demo,
+  including a full feature-by-feature verification pass (searchable pickers, phone layouts,
+  scrolling, honest plan timelines, a proper 404).
 - **Stephen Kidder**: the Databricks warehouse and synthetic alumni pool, the Summer 2027 internships
   directory, the plan agent and opening pages, warehouse-backed sessions, and the security review.

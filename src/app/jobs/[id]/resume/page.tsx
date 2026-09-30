@@ -65,7 +65,7 @@ export default async function TailorPage({ params }: { params: Promise<{ id: str
       </section>
 
       <section className="tb-band tb-band-top tb-layer">
-        <div className="tb-wrap grid gap-[var(--space-32)] lg:grid-cols-[1.35fr_1fr]">
+        <div className="tb-wrap grid grid-cols-[minmax(0,1fr)] gap-[var(--space-32)] lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
           <Workspace
             positionId={position.id}
             initial={{ outcome, answers, error: null }}
@@ -74,7 +74,7 @@ export default async function TailorPage({ params }: { params: Promise<{ id: str
             fileName={fileName}
           />
 
-          <aside className="grid gap-[var(--space-24)] content-start">
+          <aside className="grid grid-cols-[minmax(0,1fr)] gap-[var(--space-24)] content-start">
             <div className="tb-panel">
               <div className="flex items-baseline justify-between gap-[var(--space-12)]">
                 <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>&gt; The posting, analyzed</p>

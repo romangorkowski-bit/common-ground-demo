@@ -60,7 +60,7 @@ export function Workspace({ positionId, initial, via, name, fileName }: {
   );
 
   return (
-    <div className="grid gap-[var(--space-24)] content-start">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-[var(--space-24)] content-start">
       <section className="tb-panel">
         <div className="flex flex-wrap items-center justify-between gap-[var(--space-16)]">
           <div className="tb-copy">
@@ -140,11 +140,11 @@ export function Workspace({ positionId, initial, via, name, fileName }: {
             {outcome.format.map((c) => (
               <li key={c.id} className="flex flex-wrap items-baseline justify-between gap-[var(--space-12)]">
                 <span className="body-sm"><span style={{ color: TONE[c.status], marginRight: 8 }} aria-hidden>{MARK[c.status]}</span>{c.label}</span>
-                <span className="mono-micro" style={{ color: TONE[c.status], textTransform: "none", maxWidth: "36rem", textAlign: "right" }}>{c.detail}</span>
+                <span className="mono-micro" style={{ color: TONE[c.status], textTransform: "none", maxWidth: "36rem", textAlign: "left" }}>{c.detail}</span>
               </li>
             ))}
           </ul>
-          <p className="mono-micro" style={{ margin: "var(--space-16) 0 0", color: "var(--ink-faint)", textTransform: "none" }}>
+          <p className="mono-micro" style={{ margin: "var(--space-16) 0 0", color: "var(--ink-faint)", textTransform: "none", overflowWrap: "anywhere" }}>
             {fileName} &middot; {outcome.pages} page{outcome.pages === 1 ? "" : "s"} &middot; via {outcome.model} &middot; {(outcome.durationMs / 1000).toFixed(1)}s. You send it; nothing is submitted for you.
           </p>
         </section>

@@ -34,7 +34,7 @@ export default async function LandingPage() {
       </Hero>
 
       <section className="tb-band tb-band-top tb-layer">
-        <div className="tb-wrap grid gap-[var(--space-32)] md:grid-cols-3">
+        <div className="tb-wrap grid grid-cols-[minmax(0,1fr)] gap-[var(--space-32)] md:grid-cols-3">
           <Point n="01" title="We read your resume first">
             Everything on it becomes something we can match on. Then we ask, once, for what a
             resume never carries.

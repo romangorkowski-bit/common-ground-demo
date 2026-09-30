@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { SCHOOL_ALIASES, ORG_ALIASES } from "@/lib/affinity/aliases";
 import type { OptionGroup } from "@/lib/intake/options";
 import type { Field } from "@/lib/intake/types";
@@ -13,24 +13,51 @@ const inputClass = "tb-field";
 /** Suggestions come from the same alias tables the matcher uses, so what a
  *  student picks is guaranteed to canonicalise. */
 function suggestionsFor(field: Field): string[] {
-  const titleCase = (s: string) =>
-    s.replace(/\b[a-z]/g, (c) => c.toUpperCase()).replace(/\bAnd\b/g, "and");
-  if (field.options === "school-canon") {
-    return [...new Set(Object.keys(SCHOOL_ALIASES).filter((k) => k.length > 4))].map(titleCase).sort();
-  }
-  if (field.options === "org-canon") {
-    return [...new Set(Object.keys(ORG_ALIASES).filter((k) => k.length > 3))].map(titleCase).sort();
-  }
+  const small = new Set(["and", "of", "for", "at", "in", "the"]);
+  const upper = new Set(["rotc", "stem"]);
+  const titleCase = (s: string) => s.split(" ").map((w, i) =>
+    upper.has(w) ? w.toUpperCase() : i > 0 && small.has(w) ? w : w[0].toUpperCase() + w.slice(1)).join(" ");
+  // One entry per school or org, under its longest (fullest) alias; the short
+  // ones still find it through matcherFor.
+  const fullest = (table: Readonly<Record<string, string>>) => {
+    const best = new Map<string, string>();
+    for (const [alias, slug] of Object.entries(table)) {
+      if (alias.length > (best.get(slug)?.length ?? 0)) best.set(slug, alias);
+    }
+    return [...best.values()].map(titleCase).sort();
+  };
+  if (field.options === "school-canon") return fullest(SCHOOL_ALIASES);
+  if (field.options === "org-canon") return fullest(ORG_ALIASES);
   return Array.isArray(field.options) ? [...field.options] : [];
 }
 
-/** Grouped option lists are objects; the canon sources are strings. */
+const GROUP_LABEL: Record<string, string> = { "school-canon": "Schools", "org-canon": "Organisations" };
+
+/** Grouped option lists are objects; the canon sources and flat lists become one group. */
 function groupsFor(field: Field): readonly OptionGroup[] | null {
   const o = field.options;
   if (Array.isArray(o) && o.length && typeof o[0] === "object" && "items" in (o[0] as object)) {
     return o as readonly OptionGroup[];
   }
-  return null;
+  const items = suggestionsFor(field);
+  if (!items.length) return null;
+  return [{ label: (typeof o === "string" && GROUP_LABEL[o]) || "Suggestions", items }];
+}
+
+/** For the canon sources, a query matches an item when it is a prefix of any
+ *  alias of the same thing, so "VT" finds Virginia Tech and "DSP" Delta Sigma Pi. */
+function matcherFor(field: Field): ((item: string, q: string) => boolean) | undefined {
+  const table = field.options === "school-canon" ? SCHOOL_ALIASES
+    : field.options === "org-canon" ? ORG_ALIASES : null;
+  if (!table) return undefined;
+  const bySlug = new Map<string, string[]>();
+  for (const [alias, slug] of Object.entries(table)) bySlug.set(slug, [...(bySlug.get(slug) ?? []), alias]);
+  return (item, q) => {
+    const lower = item.toLowerCase();
+    if (lower.includes(q)) return true;
+    const slug = table[lower];
+    return Boolean(slug && bySlug.get(slug)?.some((a) => a.startsWith(q)));
+  };
 }
 
 export interface FieldInputProps {
@@ -87,8 +114,8 @@ export function FieldInput(props: FieldInputProps) {
 }
 
 /**
- * A field with a curated list gets a real searchable multi-select; everything
- * else keeps free-text chip entry with datalist hints. These are two
+ * A field with any suggestions gets a real searchable multi-select; everything
+ * else keeps free-text chip entry. These are two
  * components rather than one with a branch, because the branch would sit
  * above the free-text path's hooks.
  */
@@ -99,12 +126,14 @@ function ChipsInput(props: FieldInputProps) {
 function PickerChips({ field, value, onChange, onDictate, dictationBusy, onDraftChange }: FieldInputProps) {
   const chips = Array.isArray(value) ? (value as string[]) : [];
   const groups = groupsFor(field)!;
+  const matcher = useMemo(() => matcherFor(field), [field]);
   const box = (trailing?: React.ReactNode) => (
     <Combobox
       inputId={field.id}
       value={chips}
       onChange={onChange}
       groups={groups}
+      match={matcher}
       placeholder={field.placeholder}
       onDraftChange={onDraftChange}
       trailing={trailing}
@@ -128,8 +157,6 @@ function FreeChips({ field, value, onChange, onDictate, dictationBusy, onDraftCh
   const chips = Array.isArray(value) ? (value as string[]) : [];
 
   const [draft, setDraft] = useState("");
-  const suggestions = suggestionsFor(field);
-  const listId = `${field.id}-options`;
 
   const add = (raw: string) => {
     const next = raw.trim();
@@ -142,16 +169,13 @@ function FreeChips({ field, value, onChange, onDictate, dictationBusy, onDraftCh
   return (
     <div>
       {chips.length > 0 && (
-        <ul className="mb-[var(--space-12)] flex flex-wrap gap-[var(--space-8)]">
+        <ul className="mb-[var(--space-12)] flex flex-wrap gap-[var(--space-8)]" style={{ margin: 0, padding: 0, listStyle: "none" }}>
           {chips.map((chip) => (
             <li key={chip}>
-              <button
-                type="button"
-                onClick={() => onChange(chips.filter((c) => c !== chip))}
-                className="focus-ring group inline-flex items-center gap-1.5 rounded-full border bg-[var(--color-raised)] py-1 pl-3 pr-2 text-[13px]"
-              >
+              <button type="button" className="tb-chip mono-label"
+                onClick={() => onChange(chips.filter((c) => c !== chip))}>
                 {chip}
-                <span className="text-[var(--color-faint)] group-hover:text-[var(--color-accent)]" aria-hidden>×</span>
+                <span aria-hidden style={{ color: "var(--ink-faint)" }}>×</span>
                 <span className="sr-only">Remove {chip}</span>
               </button>
             </li>
@@ -164,24 +188,14 @@ function FreeChips({ field, value, onChange, onDictate, dictationBusy, onDraftCh
         <input
           className={inputClass}
           value={draft}
-          list={suggestions.length ? listId : undefined}
           placeholder={field.placeholder ?? "Type and press Enter"}
-          onChange={(e) => {
-            // Picking from the datalist fires a change with the full value and
-            // no keydown, so commit it here rather than waiting for Enter.
-            const next = e.target.value;
-            if (suggestions.includes(next)) add(next);
-            else { setDraft(next); onDraftChange?.(next); }
-          }}
+          onChange={(e) => { setDraft(e.target.value); onDraftChange?.(e.target.value); }}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === ",") { e.preventDefault(); add(draft); }
             if (e.key === "Backspace" && !draft && chips.length) onChange(chips.slice(0, -1));
           }}
           onBlur={() => add(draft)}
         />,
-      )}
-      {suggestions.length > 0 && (
-        <datalist id={listId}>{suggestions.map((s) => <option key={s} value={s} />)}</datalist>
       )}
 
       {field.specificityMeter && <SpecificityMeter values={chips} />}
@@ -216,21 +230,21 @@ function DateInput({ value, onChange }: FieldInputProps) {
   );
 }
 
-function SelectInput({ field, value, onChange }: FieldInputProps) {
-  const options = suggestionsFor(field);
+function SelectInput({ field, value, onChange, onDraftChange }: FieldInputProps) {
+  const groups = useMemo(() => groupsFor(field) ?? [], [field]);
+  const matcher = useMemo(() => matcherFor(field), [field]);
+  const chosen = typeof value === "string" && value ? [value] : [];
   return (
-    <div>
-      <input
-        className={inputClass}
-        list={`${field.id}-select`}
-        value={typeof value === "string" ? value : ""}
-        placeholder={field.placeholder ?? "Start typing…"}
-        onChange={(e) => onChange(e.target.value || null)}
-      />
-      <datalist id={`${field.id}-select`}>
-        {options.map((o) => <option key={o} value={o} />)}
-      </datalist>
-    </div>
+    <Combobox
+      inputId={field.id}
+      single
+      value={chosen}
+      onChange={(next) => onChange(next[0] ?? null)}
+      groups={groups}
+      match={matcher}
+      placeholder={chosen.length ? "Search to change it" : field.placeholder ?? "Start typing…"}
+      onDraftChange={onDraftChange}
+    />
   );
 }
 

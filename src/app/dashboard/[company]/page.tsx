@@ -196,8 +196,8 @@ export default async function CompanyPage({
                         <Link className="tb-link" href={`/jobs/${position.id}`}>{position.title}</Link>
                         {position.location && <span style={{ color: "var(--ink-faint)" }}> &middot; {position.location}</span>}
                       </span>
-                      <span className="mono-micro" style={{ color: fit.windowStatus === "upcoming" ? "var(--ink-faint)" : "var(--alert)", whiteSpace: "nowrap" }}>
-                        {windowLabel(fit)}{fit.datesKnown && <> &middot; {position.opensOn}</>}
+                      <span className="mono-micro" style={{ color: fit.windowStatus === "upcoming" ? "var(--ink-faint)" : "var(--alert)" }}>
+                        <span style={{ whiteSpace: "nowrap" }}>{windowLabel(fit)}{fit.datesKnown && <> &middot; {position.opensOn}</>}</span>
                         {" "}&middot; <Link className="tb-link" href={`/jobs/${position.id}`}>What they want &middot; improve my chances &#8599;</Link>
                       </span>
                     </li>

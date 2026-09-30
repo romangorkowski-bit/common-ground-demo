@@ -3,7 +3,7 @@ import { test } from "vitest";
 import { NOW, student } from "@/lib/affinity/__fixtures__/cast";
 import { mockPositions } from "@/lib/positions/mock";
 import { rankPositions } from "@/lib/positions/score";
-import { runPlanAgent } from "./agent";
+import { runPlanAgent, timelineFor } from "./agent";
 import { learningOptionsLocal } from "./catalog";
 
 const positions = mockPositions(NOW);
@@ -57,4 +57,11 @@ test("a posting with nothing missing yields an empty, honest plan", async () => 
   const r = await runPlanAgent({ student, position: easy, ranked, mode: "mock" });
   assert.deepEqual(r.plan.steps, []);
   assert.match(r.plan.timeline, /Nothing is missing/);
+});
+
+test("the timeline says when the plan does not fit before the window opens", () => {
+  const now = new Date("2026-09-30T12:00:00Z");
+  assert.match(timelineFor(4, "2026-12-30", now), /About 4 weeks of effort, and 12 weeks before/);
+  assert.match(timelineFor(19, "2026-10-12", now), /but only 11 days before the window opens 2026-10-12/);
+  assert.match(timelineFor(3, "2026-09-01", now), /already open/);
 });

@@ -6,6 +6,7 @@ import { ReferralBadge, levelColor } from "@/components/referral-badge";
 import { scoreAffinity } from "@/lib/affinity/score";
 import { getPeopleProvider } from "@/lib/people";
 import { companyInfo } from "@/lib/companies";
+import { computeGaps } from "@/lib/intake/gaps";
 import { scorePersonByHomophily } from "@/lib/homophily";
 import { NO_FACTORS } from "@/lib/homophily/scorer";
 import { scoreReferral } from "@/lib/referral";
@@ -39,6 +40,21 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
     seen.add(key);
     return true;
   });
+  // Only questions the questionnaire would still ask: a field the student
+  // already answered, even with "none", is not something to send them back for.
+  const open = new Set(computeGaps({ profile: student.profile, facts: student.facts, meta: student.meta }).map((g) => g.field.id));
+  const unlockable = result.unlockable.filter((u) => open.has(u.fieldId));
+  // The ladder's shared-employer copy is written for people who never
+  // overlapped; someone who has seen the student's work needs the opposite.
+  const outreach = referral.archetype === "sponsor"
+    ? {
+        ...result.outreach,
+        opener: result.outreach.opener.replace(
+          /^I worked at (.+) too — I saw you did as well\.$/,
+          "We overlapped at $1 — I'd love to hear what you're working on now."),
+        guidance: "You overlapped, so they can speak to your work. Remind them where your paths crossed before you ask for anything.",
+      }
+    : result.outreach;
   const companyPath = person.currentCompany ? `/dashboard/${companyInfo(person.currentCompany).slug}` : "/dashboard";
 
   return (
@@ -75,8 +91,8 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       </section>
 
       <section className="tb-band tb-band-top tb-layer">
-        <div className="tb-wrap grid gap-[var(--space-32)] lg:grid-cols-[1.35fr_1fr]">
-          <div className="grid gap-[var(--space-24)] content-start">
+        <div className="tb-wrap grid grid-cols-[minmax(0,1fr)] gap-[var(--space-32)] lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-[var(--space-24)] content-start">
             <div className="tb-panel">
               <div className="flex items-baseline justify-between gap-[var(--space-12)]">
                 <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>&gt; Why {referral.level} / 5 to refer you</p>
@@ -105,14 +121,14 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
                 background: "var(--canvas)", borderLeft: "var(--border-2) solid var(--rule-strong)",
                 textTransform: "none",
               }}>
-                {result.outreach.opener}
+                {outreach.opener}
               </blockquote>
               <div className="tb-rule" style={{ paddingTop: "var(--space-16)" }}>
                 <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>What to do with it</p>
-                <p className="body-sm" style={{ margin: "var(--space-8) 0 0" }}>{result.outreach.guidance}</p>
-                {result.outreach.timing && (
+                <p className="body-sm" style={{ margin: "var(--space-8) 0 0" }}>{outreach.guidance}</p>
+                {outreach.timing && (
                   <p className="mono-label" style={{ color: "var(--alert)", margin: "var(--space-12) 0 0" }}>
-                    <span className="tb-led tb-led--alert" aria-hidden /> {result.outreach.timing}
+                    <span className="tb-led tb-led--alert" aria-hidden /> {outreach.timing}
                   </p>
                 )}
               </div>
@@ -122,7 +138,7 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
 
-          <aside className="grid gap-[var(--space-24)] content-start">
+          <aside className="grid grid-cols-[minmax(0,1fr)] gap-[var(--space-24)] content-start">
             <div className="tb-panel">
               <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>&gt; What you have in common</p>
               {inCommon.length === 0 ? (
@@ -147,11 +163,11 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
               </p>
             </div>
 
-            {result.unlockable.length > 0 && (
+            {unlockable.length > 0 && (
               <div className="tb-panel">
                 <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>&gt; What would move them up</p>
                 <ul className="body-sm" style={{ margin: "var(--space-12) 0 0", padding: 0, listStyle: "none", color: "var(--ink-muted)", display: "grid", gap: "var(--space-8)" }}>
-                  {result.unlockable.map((u) => (
+                  {unlockable.map((u) => (
                     <li key={u.fieldId}>{u.because} — tell us and they may rate higher.</li>
                   ))}
                 </ul>

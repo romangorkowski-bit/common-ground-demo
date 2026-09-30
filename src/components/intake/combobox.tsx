@@ -28,11 +28,15 @@ export interface ComboboxProps {
   inputId?: string;
   /** Sits inside the input's box, at its end — the dictation mic. */
   trailing?: React.ReactNode;
+  /** One answer only: picking replaces the current one. */
+  single?: boolean;
+  /** Custom search, e.g. so "VT" finds Virginia Tech. Defaults to substring. */
+  match?: (item: string, query: string) => boolean;
 }
 
 interface Row { kind: "header" | "option" | "free"; label: string; value?: string }
 
-export function Combobox({ value, onChange, groups, placeholder, onDraftChange, inputId, trailing }: ComboboxProps) {
+export function Combobox({ value, onChange, groups, placeholder, onDraftChange, inputId, trailing, single, match }: ComboboxProps) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -48,7 +52,8 @@ export function Combobox({ value, onChange, groups, placeholder, onDraftChange, 
     const out: Row[] = [];
     for (const group of groups) {
       const items = group.items.filter(
-        (item) => !chosen.has(item.toLowerCase()) && (!q || item.toLowerCase().includes(q)),
+        (item) => !chosen.has(item.toLowerCase())
+          && (!q || (match ? match(item, q) : item.toLowerCase().includes(q))),
       );
       if (!items.length) continue;
       out.push({ kind: "header", label: group.label });
@@ -56,10 +61,14 @@ export function Combobox({ value, onChange, groups, placeholder, onDraftChange, 
     }
     const exact = groups.some((g) => g.items.some((i) => i.toLowerCase() === q));
     if (q && !exact && !chosen.has(q)) {
-      out.unshift({ kind: "free", label: `Add “${query.trim()}”`, value: query.trim() });
+      const free: Row = { kind: "free", label: `Add “${query.trim()}”`, value: query.trim() };
+      // Enter takes the best match when the list is the point: a single-answer
+      // field, or one searched by alias, where "dsp" means Delta Sigma Pi.
+      if ((single || match) && out.length) out.push({ kind: "header", label: "Not listed" }, free);
+      else out.unshift(free);
     }
     return out;
-  }, [groups, query, chosen]);
+  }, [groups, query, chosen, match, single]);
 
   const selectable = rows.filter((r) => r.kind !== "header");
 
@@ -82,8 +91,9 @@ export function Combobox({ value, onChange, groups, placeholder, onDraftChange, 
   const add = (raw: string) => {
     const next = raw.trim();
     if (!next || chosen.has(next.toLowerCase())) { type(""); return; }
-    onChange([...value, next]);
+    onChange(single ? [next] : [...value, next]);
     type("");
+    if (single) setOpen(false);
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

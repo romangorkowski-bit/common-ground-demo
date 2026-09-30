@@ -74,13 +74,14 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
                 </p>
               </div>
             </div>
-            <div className="flex flex-col items-end gap-[var(--space-12)]">
+            <div className="ml-auto flex flex-col items-end gap-[var(--space-12)]">
               <span className="mono-label" style={{ border: "var(--border-2) solid var(--signal)", color: "var(--signal)", padding: "var(--space-4) var(--space-10)", whiteSpace: "nowrap" }}>
                 Fit <span style={{ color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{Math.round(fit.score)}</span>
               </span>
               <div className="flex flex-wrap justify-end gap-[var(--space-8)]">
                 <Link className="tb-btn tb-btn--sm tb-btn--solid mono-label" href={`/jobs/${position.id}/resume`}>Tailor my resume &#8599;</Link>
-                {position.url && (
+                {/* Sample postings carry placeholder example.com links that go nowhere. */}
+                {position.url && !/^https?:\/\/[^/]*example\.com\//.test(position.url) && (
                   <a className="tb-btn tb-btn--sm mono-label" href={position.url} target="_blank" rel="noreferrer">The posting &#8599;</a>
                 )}
               </div>
@@ -90,8 +91,8 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
       </section>
 
       <section className="tb-band tb-band-top tb-layer">
-        <div className="tb-wrap grid gap-[var(--space-32)] lg:grid-cols-[1.35fr_1fr]">
-          <div className="grid gap-[var(--space-24)] content-start">
+        <div className="tb-wrap grid grid-cols-[minmax(0,1fr)] gap-[var(--space-32)] lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-[var(--space-24)] content-start">
             <div className="tb-panel">
               <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>&gt; What they&rsquo;re looking for</p>
               <ul style={{ margin: "var(--space-16) 0 0", padding: 0, listStyle: "none", display: "grid", gap: "var(--space-8)" }}>
@@ -129,7 +130,7 @@ export default async function OpeningPage({ params }: { params: Promise<{ id: st
             <AskAgent positionId={position.id} provider={provider.name} gapsCount={missing} />
           </div>
 
-          <aside className="grid gap-[var(--space-24)] content-start">
+          <aside className="grid grid-cols-[minmax(0,1fr)] gap-[var(--space-24)] content-start">
             <div className="tb-panel">
               <p className="mono-label" style={{ color: "var(--ink-subtle)", margin: 0 }}>&gt; Most likely to refer you at {info.name}</p>
               {top.length === 0 ? (

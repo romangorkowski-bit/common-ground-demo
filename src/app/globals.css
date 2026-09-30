@@ -34,7 +34,15 @@
   --tier-12: #ff8a58; --tier-13: #ff8358;
 }
 
-html, body { margin: 0; height: 100%; }
+/* min-height, not height: a body pinned to the viewport with overflow-x hidden
+   becomes its own scroll box, and the mouse wheel stops scrolling the page. */
+html, body { margin: 0; }
+body { min-height: 100vh; }
+
+/* A grid with no column template sizes its one column to its widest content,
+   so a long line inside a card pushes the card off a phone screen. Implicit
+   columns may shrink instead; :where keeps this below every utility. */
+:where(*) { grid-auto-columns: minmax(0, 1fr); }
 
 body {
   background-color: var(--canvas);
@@ -155,6 +163,7 @@ body {
      not press together. */
   .tb-cards {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-24);
   }
   @media (min-width: 768px) {
@@ -167,7 +176,7 @@ body {
   }
 
   /* Panels stacked in one band, rather than one panel per band. */
-  .tb-stack { display: grid; gap: var(--space-24); }
+  .tb-stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-24); }
   a.tb-card:hover { transform: translate(-2px, -2px); box-shadow: var(--shadow-brutal); }
 
   .tb-rule { border-top: var(--border-1) solid var(--rule); }
@@ -233,4 +242,20 @@ body {
   .tb-mic[aria-pressed="true"] { animation: none; }
   /* The fill still grows with the clock; it just steps instead of easing. */
   .tb-progress__bar { transition: none; }
+}
+
+/* Phone widths: the brand and the four links do not fit on one row, so the
+   links drop to their own row and wrap rather than running off the screen. */
+@media (max-width: 640px) {
+  .tb-nav { flex-wrap: wrap; row-gap: var(--space-12); padding: var(--space-16); }
+  .tb-nav__links { flex-wrap: wrap; column-gap: var(--space-20); row-gap: var(--space-8); }
+  .tb-nav__links:empty { display: none; }
+}
+
+/* The hero's small type sits over the densest part of the ASCII relief at
+   common laptop widths; a paper plate behind it keeps it readable. */
+.tb-hero__lines, .tb-hero__note {
+  background: var(--canvas);
+  padding: var(--space-4) var(--space-8);
+  margin-left: calc(-1 * var(--space-8));
 }

@@ -14,7 +14,7 @@ export function PlanResult({ result }: { result: AgentResult }) {
   return (
     <div className="grid gap-[var(--space-24)]" style={{ marginTop: "var(--space-24)" }}>
       <section className="tb-panel">
-        <p className="mono-label" style={{ margin: 0 }}>&gt; How to improve your chances</p>
+        <p className="mono-label" style={{ margin: 0 }}>&gt; Your plan</p>
         <p className="body-sm" style={{ margin: "var(--space-12) 0 0" }}>{plan.whyThisRole}</p>
         {plan.steps.length === 0 ? (
           <p className="body-sm" style={{ margin: "var(--space-16) 0 0", color: "var(--ink-muted)" }}>Nothing on the posting is missing from your profile. Spend the time on the people who can get you in the room.</p>

@@ -127,7 +127,7 @@ export async function runPlanAgent(input: {
       steps.push(stepFor(gap, opts[0] ?? null, steps.length + 1, opts[0] ? `${opts[0].title} — ${opts[0].note}` : "Not in the catalog yet; ask the club or a person on your list what they did."));
     }
     const plan = finalize(header(null, fit ? fit.reasons.join(". ") : `${position.title} at ${position.company}.`), steps,
-      steps.length ? `Start with the hard requirements. ${sumWeeks(steps)} weeks of effort before the window opens ${position.opensOn}.` : "Nothing is missing; spend the time on the people who can get you in the room.");
+      steps.length ? timelineFor(sumWeeks(steps), position.opensOn) : "Nothing is missing; spend the time on the people who can get you in the room.");
     return { runId, mode: "fallback", model: input.mode === "mock" ? "none (mock)" : AI_QUERY_MODEL, plan, resume: null, fabrications: [], trace, durationMs: Date.now() - t0, note };
   };
 
@@ -225,6 +225,24 @@ function stepFor(gap: Gap, opt: LearningOption | null, order: number, action: st
 }
 
 const sumWeeks = (steps: PlanStep[]) => steps.reduce((n, s) => n + (s.weeks ?? 0), 0);
+
+/**
+ * The sequencing sentence, measured against the calendar: a plan that needs
+ * 19 weeks for a window 11 days out must say so rather than imply it fits.
+ */
+export function timelineFor(weeks: number, opensOn: string, now = new Date()): string {
+  const days = Math.floor((Date.parse(`${opensOn}T00:00:00Z`) - now.getTime()) / 86_400_000);
+  if (Number.isNaN(days)) return `Start with the hard requirements. About ${weeks} weeks of effort in all.`;
+  if (days <= 0) {
+    return `The window is already open. Apply now with what you have, and work on the hard requirements alongside it (about ${weeks} weeks in all).`;
+  }
+  const left = Math.max(1, Math.floor(days / 7));
+  const until = days < 14 ? `${days} days` : `${left} weeks`;
+  if (weeks <= left) {
+    return `Start with the hard requirements. About ${weeks} weeks of effort, and ${until} before the window opens ${opensOn}.`;
+  }
+  return `About ${weeks} weeks of effort but only ${until} before the window opens ${opensOn}: do the hard requirements first, apply on time, and keep going on the rest.`;
+}
 
 function finalize(head: Omit<Plan, "steps" | "totalCost" | "totalWeeks"> & { steps: PlanStep[]; totalCost: number; totalWeeks: number }, steps: PlanStep[], timeline: string): Plan {
   return { ...head, steps, timeline, totalCost: steps.reduce((n, s) => n + (s.cost_usd ?? 0), 0), totalWeeks: sumWeeks(steps) };

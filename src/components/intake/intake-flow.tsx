@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { saveAnswersAction, structureAnswerAction } from "@/app/intake/actions";
 import type { Answer } from "@/lib/intake/answers";
 import { humanEstimate, peopleRemaining } from "@/lib/intake/steps";
@@ -49,6 +49,14 @@ export function IntakeFlow({ steps: liveSteps, unrouted }: { steps: IntakeStep[]
   const step = steps[safeIndex];
   const last = safeIndex === steps.length - 1;
   const remaining = useMemo(() => peopleRemaining(steps, safeIndex), [steps, safeIndex]);
+
+  // A new screen starts at its heading, not wherever the last one's Continue was.
+  const shownIndex = useRef(safeIndex);
+  useEffect(() => {
+    if (shownIndex.current === safeIndex) return;
+    shownIndex.current = safeIndex;
+    window.scrollTo({ top: 0 });
+  }, [safeIndex]);
 
   if (!step) return null;
 
@@ -100,7 +108,10 @@ export function IntakeFlow({ steps: liveSteps, unrouted }: { steps: IntakeStep[]
       const text = draft.trim();
       if (!text) continue;
       const field = step.fields.find((g) => g.field.id === id)?.field;
-      if (!field || field.input !== "chips") continue;
+      if (!field) continue;
+      // A single-choice field typed into but never picked takes the typed text.
+      if (field.input === "select") { merged[id] = text; continue; }
+      if (field.input !== "chips") continue;
       const current = Array.isArray(merged[id]) ? (merged[id] as string[]) : [];
       if (!current.some((c) => c.toLowerCase() === text.toLowerCase())) {
         merged[id] = [...current, text];
@@ -201,8 +212,8 @@ export function IntakeFlow({ steps: liveSteps, unrouted }: { steps: IntakeStep[]
           const isSkipped = Boolean(skipped[id]);
           return (
             <section key={id} style={isSkipped ? { opacity: 0.45 } : undefined}>
-              <div className="flex flex-wrap items-baseline justify-between gap-[var(--space-12)]">
-                <label className="title" style={{ textTransform: "uppercase" }} htmlFor={id}>
+              <div className="flex items-start justify-between gap-[var(--space-12)]">
+                <label className="title" style={{ textTransform: "uppercase", flex: 1, minWidth: 0 }} htmlFor={id}>
                   {gap.field.question}
                   {gap.field.required && (
                     <span className="mono-micro" style={{ marginLeft: 8, color: "var(--alert)" }}>required</span>
@@ -213,6 +224,7 @@ export function IntakeFlow({ steps: liveSteps, unrouted }: { steps: IntakeStep[]
                     type="button"
                     onClick={() => setSkipped((s) => ({ ...s, [id]: !s[id] }))}
                     className="tb-btn tb-btn--sm mono-label"
+                    style={{ flexShrink: 0 }}
                   >
                     {isSkipped ? "Let me answer" : gap.field.skipLabel}
                   </button>
