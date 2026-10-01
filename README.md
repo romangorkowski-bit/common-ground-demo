@@ -8,8 +8,8 @@ already give up, and shows what each internship asks for and how to close the ga
 Built as a team project for a Databricks hackathon, September 2026. My part is listed under
 [Credits](#credits).
 
-> **Status: work in progress.** The demo below runs end to end on sample data. Reading a real resume,
-> accounts and the live warehouse need keys and are not part of the public demo yet; see
+> The demo runs end to end on sample data with two commands and no keys ([Run the demo](#run-the-demo)).
+> Reading a real resume, accounts and the live warehouse are built but need credentials; see
 > [What is still in progress](#what-is-still-in-progress).
 
 ![Landing page](docs/screenshots/landing.jpg)
@@ -17,6 +17,33 @@ Built as a team project for a Databricks hackathon, September 2026. My part is l
 | People at a company, most likely to refer you first | One opening: what they want, where you stand |
 |---|---|
 | ![Company page](docs/screenshots/company.jpg) | ![Opening page](docs/screenshots/opening.jpg) |
+
+## Security, privacy and AI risk
+
+The app reads resumes with a model, ranks people and rewrites a document a student signs their
+name to. Most of its risk lies in what the model is allowed to decide and what data is kept.
+Items marked *(team)* were built by my teammate; the rest are mine.
+
+- **A guardrail on model output.** `src/lib/ai/fabrication-check.ts` checks every employer, title,
+  date, school, skill and number in an AI-tailored resume against the profile the student confirmed.
+  Anything unsupported is shown to the student instead of shipped. Tested in `fabrication-check.test.ts`.
+- **Explainable, deterministic decisions.** People are ranked by pure functions with no model in the
+  scoring path (`src/lib/affinity/`, `src/lib/referral/`), and every score names the facts behind it.
+  Tests pin exact outcomes, so any change in ranking behaviour fails a test.
+- **Untrusted input validated at the boundary.** Every profile a model extracts passes a zod schema
+  before it is stored or ranked (`src/lib/ai/schemas.ts`). Redirects after sign-in are filtered
+  against open-redirect tricks (`src/lib/safe-path.ts`).
+- **Data minimisation.** The demo asks for no name, email or password, and each visitor's answers stay
+  in their own `httpOnly` cookie. People pulled from the warehouse are scored in memory and never
+  stored, the alumni pool is synthetic, and nothing is inferred about anyone's identity.
+- **Row-level security** for real accounts: owner-only Postgres policies keyed on `auth.uid()`
+  (`supabase/migrations/`).
+- *(team)* A secret-scanning pre-commit hook active in every clone, parameterised SQL only, per-session
+  rate limits, and security headers with HSTS.
+
+[SECURITY.md](SECURITY.md) has the written audit and a risk register. It also lists the controls
+that are **not** in place yet (no Content-Security-Policy, rate limits per instance, no scheduled
+retention job) and why.
 
 ## Run the demo
 
@@ -149,7 +176,7 @@ security keyed on `auth.uid()`. What is missing is a project to point it at. Unt
 `src/lib/session/demo-store.ts` keeps one student per browser behind the `cg_demo` cookie.
 
 1. Create a free project at [supabase.com](https://supabase.com) (this needs your own login).
-2. Run the three files in `supabase/migrations/` **in order** in the project's SQL editor, or
+2. Run the four files in `supabase/migrations/` **in order** in the project's SQL editor, or
    `supabase db push` with the CLI. `0001` creates the tables, the owner-only RLS policies, and the
    `handle_new_user` trigger that gives every new account its `profiles` row; `0002` creates the
    private `documents` bucket; `0003` adds the questionnaire columns; `0004` adds the homophily

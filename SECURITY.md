@@ -3,6 +3,22 @@
 What protects the public demo, what does not, and what to change before it is anything more than a demo.
 Audited September 2026.
 
+## Risk register
+
+| Risk | Control | Where | Status |
+|---|---|---|---|
+| A secret is committed to the repo | `.env*` gitignored; pre-commit hook blocks tokens in every clone | `.githooks/pre-commit` | In place |
+| The model invents a fact on a resume the student signs | Every employer, title, date, school, skill and number checked against the confirmed profile | `src/lib/ai/fabrication-check.ts` | In place |
+| Malformed or hostile model output is stored or rendered | zod validation before storage; output rendered as text, never HTML | `src/lib/ai/schemas.ts` | In place |
+| SQL injection through the warehouse | Parameterised statements only; table names are constants | `src/lib/databricks/` | In place |
+| Open redirect after sign-in | Same-site paths only; `//`, `\` and control characters refused | `src/lib/safe-path.ts` | In place |
+| One user reads another's data | Owner-only row-level security keyed on `auth.uid()` | `supabase/migrations/0001_init.sql` | In place |
+| Clickjacking, MIME sniffing, downgrade to HTTP | `X-Frame-Options: DENY`, `nosniff`, HSTS | `next.config.ts` | In place |
+| Real people's data in the pool | Synthetic people only; no scraping | `databricks/data/generate_mock.py` | In place |
+| Abuse of paid model endpoints | Per-session and per-instance rate limits | `src/lib/limit.ts` | Partial: needs a shared limiter for real traffic |
+| Script injection beyond the above | Content-Security-Policy with a per-request nonce | — | Not done |
+| Visitor sessions kept indefinitely | Delete sessions after 14 days, agent runs after 30 | — | Planned: no scheduled job yet |
+
 ## The demo
 
 With no `.env.local` the app holds no secrets and calls no outside service: people, postings and the
